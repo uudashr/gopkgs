@@ -30,7 +30,6 @@ Use -format to custom the output using template syntax. The struct being passed 
 Get package name along with the import path.
 ```
 $ gopkgs -format "{{.Name}};{{.ImportPath}}"
-...
 testing;github.com/mattes/migrate/source/testing
 http;github.com/stretchr/testify/http
 ql;github.com/mattes/migrate/database/ql
@@ -44,5 +43,4 @@ bindata;github.com/mattes/migrate/source/go-bindata
 postgres;github.com/mattes/migrate/database/postgres
 test;github.com/vektra/mockery/mockery/fixtures
 awss3;github.com/mattes/migrate/source/aws-s3
-...
 ```
