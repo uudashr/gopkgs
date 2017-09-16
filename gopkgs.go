@@ -65,11 +65,6 @@ func Packages() (map[string]*Pkg, error) {
 
 			pkgDir := filepath.Dir(filename)
 			pkgName := src.Name.Name
-			if pkgName == "main" {
-				// skip main package
-				return nil
-			}
-
 			pkgPath := filepath.ToSlash(pkgDir[len(dir)+len("/"):])
 
 			pkg, found := pkgs[pkgDir]
