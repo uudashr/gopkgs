@@ -33,3 +33,8 @@ lint: vendor
 .PHONY: test
 test: vendor
 	@go test -bench=. $$(glide novendor)
+
+# Build and Installation
+.PHONY: install
+install: vendor
+	@go install $$(glide novendor)
