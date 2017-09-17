@@ -18,6 +18,17 @@ vendor: glide.lock
 clean-vendor:
 	@rm -rf vendor
 
+# Linter
+.PHONY: lint-prepare
+lint-prepare:
+	@echo "Installing gometalinter"
+	@go get -u github.com/alecthomas/gometalinter
+	@gometalinter --install
+
+.PHONY: lint
+lint: vendor
+	@gometalinter --deadline=2m $$(glide novendor)
+
 # Testing
 .PHONY: test
 test: vendor
