@@ -78,7 +78,7 @@ func Packages() (map[string]*Pkg, error) {
 			pkgPath := filepath.ToSlash(pkgDir[len(dir)+len("/"):])
 
 			pkgsMu.RLock()
-			pkg, ok := pkgs[pkgDir]
+			_, ok := pkgs[pkgDir]
 			pkgsMu.RUnlock()
 
 			if ok {
@@ -86,7 +86,7 @@ func Packages() (map[string]*Pkg, error) {
 				return nil
 			}
 
-			pkg = &Pkg{
+			pkg := &Pkg{
 				Name:       pkgName,
 				ImportPath: pkgPath,
 				Dir:        pkgDir,
