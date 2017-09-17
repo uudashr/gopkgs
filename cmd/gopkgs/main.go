@@ -64,7 +64,9 @@ func main() {
 	}()
 
 	for _, pkg := range pkgs {
-		tpl.Execute(w, pkg)
+		if err := tpl.Execute(w, pkg); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		fmt.Fprintln(w)
 	}
 }
