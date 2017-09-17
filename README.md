@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/uudashr/gopkgs.svg?branch=master)](https://travis-ci.org/uudashr/gopkgs)
 # gopkgs
 
 Gopkgs is tools that provide list of available Go packages that can be imported.
