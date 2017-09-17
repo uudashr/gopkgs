@@ -7,6 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
+
+	"github.com/MichaelTJones/walk"
 )
 
 // Pkg hold the information of the package.
@@ -19,10 +22,12 @@ type Pkg struct {
 // Packages return the go packages.
 func Packages() (map[string]*Pkg, error) {
 	fset := token.NewFileSet()
+
+	var pkgsMu sync.RWMutex
 	pkgs := make(map[string]*Pkg)
-	badPkgs := make(map[string]bool)
+
 	for _, dir := range build.Default.SrcDirs() {
-		err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		err := walk.Walk(dir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
@@ -32,20 +37,20 @@ func Packages() (map[string]*Pkg, error) {
 
 			if strings.HasPrefix(info.Name(), ".") {
 				if info.IsDir() {
-					return filepath.SkipDir
+					return walk.SkipDir
 				}
 				return nil
 			}
 
 			if strings.HasPrefix(info.Name(), "_") {
 				if info.IsDir() {
-					return filepath.SkipDir
+					return walk.SkipDir
 				}
 				return nil
 			}
 
 			if info.IsDir() && info.Name() == "testdata" {
-				return filepath.SkipDir
+				return walk.SkipDir
 			}
 
 			if strings.HasSuffix(info.Name(), "_test.go") {
@@ -72,11 +77,11 @@ func Packages() (map[string]*Pkg, error) {
 
 			pkgPath := filepath.ToSlash(pkgDir[len(dir)+len("/"):])
 
+			pkgsMu.RLock()
 			pkg, found := pkgs[pkgDir]
+			pkgsMu.RUnlock()
+
 			if found {
-				if pkg.Name != pkgName {
-					badPkgs[pkgDir] = true
-				}
 				// we've done with this package
 				return nil
 			}
@@ -86,7 +91,9 @@ func Packages() (map[string]*Pkg, error) {
 				ImportPath: pkgPath,
 				Dir:        pkgDir,
 			}
+			pkgsMu.Lock()
 			pkgs[pkgDir] = pkg
+			pkgsMu.Unlock()
 			return nil
 		})
 

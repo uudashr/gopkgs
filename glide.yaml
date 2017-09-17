@@ -1,0 +1,3 @@
+package: github.com/uudashr/gopkgs
+import:
+- package: github.com/MichaelTJones/walk
