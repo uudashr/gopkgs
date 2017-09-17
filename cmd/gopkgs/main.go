@@ -57,7 +57,11 @@ func main() {
 	}
 
 	w := bufio.NewWriter(os.Stdout)
-	defer w.Flush()
+	defer func() {
+		if err := w.Flush(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+		}
+	}()
 
 	for _, pkg := range pkgs {
 		tpl.Execute(w, pkg)
