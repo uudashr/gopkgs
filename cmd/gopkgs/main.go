@@ -60,12 +60,14 @@ func main() {
 	defer func() {
 		if err := w.Flush(); err != nil {
 			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 	}()
 
 	for _, pkg := range pkgs {
 		if err := tpl.Execute(w, pkg); err != nil {
 			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
 		}
 		fmt.Fprintln(w)
 	}
