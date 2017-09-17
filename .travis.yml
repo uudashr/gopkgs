@@ -20,7 +20,7 @@ install:
   - make vendor
 
 before_script:
-  - make vendor-lint
+  - make lint-prepare
 
 script:
   - make lint
