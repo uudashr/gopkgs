@@ -11,13 +11,14 @@ go:
   - tip
 
 before_install:
-  - make prepare-vendor
+  - make vendor-prepare
 
 install:
   - make vendor
 
 before_script:
-  - make prepare-lint
+  - make vendor-lint
 
 script:
+  - make lint
   - make test
