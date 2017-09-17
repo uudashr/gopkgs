@@ -20,8 +20,8 @@ install:
   - make vendor
 
 before_script:
-  - make lint-prepare
+  - if [[ "$(go version)" =~ "go version go1.5" ]]; then echo skipping gometalinter; else make lint-prepare; fi
 
 script:
-  - make lint
+  - if [[ "$(go version)" =~ "go version go1.5" ]]; then echo skipping gometalinter; else make lint; fi
   - make test
