@@ -11,7 +11,10 @@ go:
   - tip
 
 before_install:
-  - make vendor-prepare
+  - if [ $TRAVIS_OS_NAME == "linux" ]; then
+      sudo add-apt-repository ppa:masterminds/glide && sudo apt-get update;
+      sudo apt-get install glide;
+    fi
 
 install:
   - make vendor
