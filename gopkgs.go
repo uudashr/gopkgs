@@ -78,10 +78,10 @@ func Packages() (map[string]*Pkg, error) {
 			pkgPath := filepath.ToSlash(pkgDir[len(dir)+len("/"):])
 
 			pkgsMu.RLock()
-			pkg, found := pkgs[pkgDir]
+			pkg, ok := pkgs[pkgDir]
 			pkgsMu.RUnlock()
 
-			if found {
+			if ok {
 				// we've done with this package
 				return nil
 			}
@@ -91,6 +91,7 @@ func Packages() (map[string]*Pkg, error) {
 				ImportPath: pkgPath,
 				Dir:        pkgDir,
 			}
+
 			pkgsMu.Lock()
 			pkgs[pkgDir] = pkg
 			pkgsMu.Unlock()
