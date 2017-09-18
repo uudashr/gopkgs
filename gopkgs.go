@@ -19,8 +19,7 @@ type Pkg struct {
 	Name       string // package name
 }
 
-// Packages return the go packages.
-// nolint: gocyclo
+// Packages available to import.
 func Packages() (map[string]*Pkg, error) {
 	fset := token.NewFileSet()
 
