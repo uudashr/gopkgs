@@ -27,7 +27,7 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@gometalinter --deadline=2m $$(glide novendor)
+	@gometalinter --cyclo-over=20 --deadline=2m $$(glide novendor)
 
 # Testing
 .PHONY: test
