@@ -23,7 +23,7 @@ type Pkg struct {
 func Packages() (map[string]*Pkg, error) {
 	fset := token.NewFileSet()
 
-	var pkgsMu sync.RWMutex
+	var pkgsMu sync.Mutex
 	pkgs := make(map[string]*Pkg)
 
 	for _, dir := range build.Default.SrcDirs() {
@@ -35,29 +35,16 @@ func Packages() (map[string]*Pkg, error) {
 			// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
 			// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
-			if strings.HasPrefix(info.Name(), ".") {
-				if info.IsDir() {
+			if info.IsDir() {
+				name := info.Name()
+				if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
 					return walk.SkipDir
 				}
 				return nil
 			}
 
-			if strings.HasPrefix(info.Name(), "_") {
-				if info.IsDir() {
-					return walk.SkipDir
-				}
-				return nil
-			}
-
-			if info.IsDir() && info.Name() == "testdata" {
-				return walk.SkipDir
-			}
-
-			if strings.HasSuffix(info.Name(), "_test.go") {
-				return nil
-			}
-
-			if !strings.HasSuffix(info.Name(), ".go") {
+			name := info.Name()
+			if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
 				return nil
 			}
 
@@ -75,25 +62,14 @@ func Packages() (map[string]*Pkg, error) {
 				return nil
 			}
 
-			pkgPath := filepath.ToSlash(pkgDir[len(dir)+len("/"):])
-
-			pkgsMu.RLock()
-			_, ok := pkgs[pkgDir]
-			pkgsMu.RUnlock()
-
-			if ok {
-				// we've done with this package
-				return nil
-			}
-
-			pkg := &Pkg{
-				Name:       pkgName,
-				ImportPath: pkgPath,
-				Dir:        pkgDir,
-			}
-
 			pkgsMu.Lock()
-			pkgs[pkgDir] = pkg
+			if _, ok := pkgs[pkgDir]; !ok {
+				pkgs[pkgDir] = &Pkg{
+					Name:       pkgName,
+					ImportPath: filepath.ToSlash(pkgDir[len(dir)+len("/"):]),
+					Dir:        pkgDir,
+				}
+			}
 			pkgsMu.Unlock()
 			return nil
 		})
