@@ -35,15 +35,14 @@ func Packages() (map[string]*Pkg, error) {
 			// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
 			// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
+			name := info.Name()
 			if info.IsDir() {
-				name := info.Name()
 				if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
 					return walk.SkipDir
 				}
 				return nil
 			}
 
-			name := info.Name()
 			if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
 				return nil
 			}
