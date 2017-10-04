@@ -48,4 +48,4 @@ awss3;github.com/mattes/migrate/source/aws-s3
 ```
 
 ## Related Project
-This is based on https://github.com/haya14busa/gopkgs but taking slightly different implementation by simplifiying it's implementation.
+This is based on https://github.com/haya14busa/gopkgs but taking slightly different path by simplifiying it's implementation.
