@@ -1,18 +1,18 @@
 # Dependencies Management
 .PHONY: vendor-prepare
 vendor-prepare:
-	@echo "Installing glide"
-	@curl https://glide.sh/get | sh
+	@echo "Installing dep"
+	go get -u github.com/golang/dep/cmd/dep
 
-glide.lock: glide.yaml
-	@glide update
+dep.lock:
+	@dep ensure -v -update
 
 .PHONY: vendor-update
 vendor-update:
-	@glide update
+	@dep ensure -v -update
 
-vendor: glide.lock
-	@glide install
+vendor:
+	@dep ensure -v
 
 .PHONY: clean-vendor
 clean-vendor:
@@ -27,14 +27,14 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@gometalinter --cyclo-over=20 --deadline=2m $$(glide novendor)
+	@gometalinter --cyclo-over=20 --deadline=2m $$(dep ensure -v)
 
 # Testing
 .PHONY: test
 test: vendor
-	@go test -bench=. $$(glide novendor)
+	@go test -bench=.
 
 # Build and Installation
 .PHONY: install
 install: vendor
-	@go install $$(glide novendor)
+	@go install
