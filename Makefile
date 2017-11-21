@@ -1,18 +1,23 @@
+PACKAGES := $(go list ./... | grep -v /vendor/)
+
 # Dependencies Management
 .PHONY: vendor-prepare
 vendor-prepare:
 	@echo "Installing glide"
 	@curl https://glide.sh/get | sh
 
-glide.lock: glide.yaml
+Gopkg.lock: Gopkg.toml
 	@glide update
 
 .PHONY: vendor-update
 vendor-update:
-	@glide update
+	@dep ensure -update
 
-vendor: glide.lock
-	@glide install
+vendor: Gopkg.lock
+	@dep ensure
+
+vendor-optimize: vendor
+	@dep prune
 
 .PHONY: clean-vendor
 clean-vendor:
@@ -27,7 +32,7 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@gometalinter --cyclo-over=20 --deadline=2m $$(glide novendor)
+	@gometalinter --cyclo-over=20 --deadline=2m $(PACKAGES)
 
 # Testing
 .PHONY: test
@@ -41,4 +46,4 @@ bench: vendor
 # Build and Installation
 .PHONY: install
 install: vendor
-	@go install $$(glide novendor)
+	@go install $(PACKAGES)

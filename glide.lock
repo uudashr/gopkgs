@@ -1,6 +1,0 @@
-hash: 1963f0f3835dec906022a821342e0f8b88e84c4b027dee8cfc46ca3c67ebc510
-updated: 2017-09-17T14:45:05.442427275+07:00
-imports:
-- name: github.com/MichaelTJones/walk
-  version: 4748e29d5718c2df4028a6543edf86fd8cc0f881
-testImports: []
