@@ -2,11 +2,11 @@
 # Dependencies Management
 .PHONY: vendor-prepare
 vendor-prepare:
-	@echo "Installing glide"
-	@curl https://glide.sh/get | sh
+	@echo "Installing dep"
+	@go get -u -v github.com/golang/dep/cmd/dep
 
 Gopkg.lock: Gopkg.toml
-	@glide update
+	@dep ensure -update
 
 .PHONY: vendor-update
 vendor-update:
