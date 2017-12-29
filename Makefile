@@ -1,3 +1,7 @@
+PACKAGE := $(shell go list)
+GOOS := $(shell go env GOOS)
+GOARCH = $(shell go env GOARCH)
+OBJ_DIR := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(PACKAGE)
 
 # Dependencies Management
 .PHONY: vendor-prepare
@@ -47,3 +51,10 @@ bench: vendor
 install: vendor
 	@go install ./...
 
+.PHONY: uninstall
+uninstall:
+	@echo "Removing binaries and libraries"
+	@go clean -i ./...
+	@if [ -d $(OBJ_DIR) ]; then \
+		rm -rf $(OBJ_DIR); \
+	fi
