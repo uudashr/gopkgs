@@ -12,15 +12,14 @@ os:
   - osx
 
 before_install:
-  make vendor-prepare
+  - make vendor-prepare
 
 install:
   - make vendor
-  # - if [[ "$(go version)" =~ "go version go1.5" ]]; then export GO15VENDOREXPERIMENT=1; fi
 
 before_script:
-  # - if [[ "$(go version)" =~ "go version go1.5" ]]; then echo skipping gometalinter; else make lint-prepare; fi
+  - make lint-prepare
 
 script:
-  # - if [[ "$(go version)" =~ "go version go1.5" ]]; then echo skipping gometalinter; else make lint; fi
+  - make lint
   - make test
