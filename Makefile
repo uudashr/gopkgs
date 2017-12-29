@@ -32,7 +32,7 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@gometalinter --cyclo-over=20 --deadline=2m $(PACKAGES)
+	@gometalinter --vendor --cyclo-over=20 --deadline=2m ./...
 
 # Testing
 .PHONY: test
