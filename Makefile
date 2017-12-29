@@ -1,4 +1,3 @@
-PACKAGES := $(go list ./... | grep -v /vendor/)
 
 # Dependencies Management
 .PHONY: vendor-prepare
@@ -46,4 +45,5 @@ bench: vendor
 # Build and Installation
 .PHONY: install
 install: vendor
-	@go install $(PACKAGES)
+	@go install ./...
+
