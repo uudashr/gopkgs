@@ -26,10 +26,16 @@ func Packages() (map[string]*Pkg, error) {
 	var pkgsMu sync.Mutex
 	pkgs := make(map[string]*Pkg)
 
-	for _, dir := range build.Default.SrcDirs() {
-		err := walk.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	for _, srcDir := range build.Default.SrcDirs() {
+		err := walk.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
+			}
+
+			pathDir := filepath.Dir(path)
+			if pathDir == srcDir {
+				// Cannot put files on $GOPATH/src or $GOROOT/src.
+				return nil
 			}
 
 			// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
@@ -54,7 +60,7 @@ func Packages() (map[string]*Pkg, error) {
 				return nil
 			}
 
-			pkgDir := filepath.Dir(filename)
+			pkgDir := pathDir
 			pkgName := src.Name.Name
 			if pkgName == "main" {
 				// skip main package
@@ -65,7 +71,7 @@ func Packages() (map[string]*Pkg, error) {
 			if _, ok := pkgs[pkgDir]; !ok {
 				pkgs[pkgDir] = &Pkg{
 					Name:       pkgName,
-					ImportPath: filepath.ToSlash(pkgDir[len(dir)+len("/"):]),
+					ImportPath: filepath.ToSlash(pkgDir[len(srcDir)+len("/"):]),
 					Dir:        pkgDir,
 				}
 			}
