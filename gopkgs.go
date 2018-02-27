@@ -20,11 +20,23 @@ type Pkg struct {
 }
 
 // Packages available to import.
-func Packages() (map[string]*Pkg, error) {
+//
+// workDir availibility will return importable packages only based
+// on workDir (vendor packages outside the workDir will be ignored).
+func Packages(workDir string) (map[string]*Pkg, error) {
 	fset := token.NewFileSet()
 
 	var pkgsMu sync.Mutex
 	pkgs := make(map[string]*Pkg)
+
+	if workDir != "" && !filepath.IsAbs(workDir) {
+		wd, err := filepath.Abs(workDir)
+		if err != nil {
+			return nil, err
+		}
+
+		workDir = wd
+	}
 
 	for _, srcDir := range build.Default.SrcDirs() {
 		err := walk.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
@@ -32,20 +44,20 @@ func Packages() (map[string]*Pkg, error) {
 				return err
 			}
 
-			pathDir := filepath.Dir(path)
-			if pathDir == srcDir {
-				// Cannot put files on $GOPATH/src or $GOROOT/src.
-				return nil
-			}
-
 			// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
 			// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
 			name := info.Name()
+			pathDir := filepath.Dir(path)
 			if info.IsDir() {
 				if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
 					return walk.SkipDir
 				}
+
+				if name == "vendor" && workDir != "" && workDir != pathDir {
+					return walk.SkipDir
+				}
+
 				return nil
 			}
 
@@ -53,7 +65,13 @@ func Packages() (map[string]*Pkg, error) {
 				return nil
 			}
 
+			if pathDir == srcDir {
+				// Cannot put files on $GOPATH/src or $GOROOT/src.
+				return nil
+			}
+
 			filename := path
+
 			src, err := parser.ParseFile(fset, filename, nil, parser.PackageClauseOnly)
 			if err != nil {
 				// skip unparseable go file

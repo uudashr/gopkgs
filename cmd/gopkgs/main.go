@@ -34,8 +34,9 @@ func init() {
 
 func main() {
 	var (
-		flagFormat = flag.String("format", "{{.ImportPath}}", "custom output format")
-		flagHelp   = flag.Bool("help", false, "show this message")
+		flagFormat  = flag.String("format", "{{.ImportPath}}", "custom output format")
+		flagWorkDir = flag.String("workDir", "", "importable packages only for workDir")
+		flagHelp    = flag.Bool("help", false, "show this message")
 	)
 
 	flag.Parse()
@@ -50,7 +51,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	pkgs, err := gopkgs.Packages()
+	pkgs, err := gopkgs.Packages(*flagWorkDir)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
