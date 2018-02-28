@@ -10,14 +10,14 @@ vendor-prepare:
 	@go get -u -v github.com/golang/dep/cmd/dep
 
 Gopkg.lock: Gopkg.toml
-	@dep ensure -update
+	@dep ensure -update $(DEP_OPTS)
 
 .PHONY: vendor-update
 vendor-update:
-	@dep ensure -update
+	@dep ensure -update $(DEP_OPTS)
 
 vendor: Gopkg.lock
-	@dep ensure
+	@dep ensure $(DEP_OPTS)
 
 vendor-optimize: vendor
 	@dep prune
@@ -40,7 +40,7 @@ lint: vendor
 # Testing
 .PHONY: test
 test: vendor
-	@go test $(ARG)
+	@go test $(TEST_OPTS)
 
 .PHONY: bench
 bench: vendor
