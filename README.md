@@ -28,6 +28,8 @@ Use -format to custom the output using template syntax. The struct being passed 
         ImportPath string // import path of package in dir
         Name       string // package name
     }
+
+Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the workDir.
 ```
 
 ### Example
@@ -49,5 +51,10 @@ test;github.com/vektra/mockery/mockery/fixtures
 awss3;github.com/mattes/migrate/source/aws-s3
 ```
 
+### Tips
+
+Use `-workDir={path}` flag, it will speed up the package search by ignoring the exernal vendor.
+
 ## Related Project
+
 This is based on https://github.com/haya14busa/gopkgs but taking slightly different path by simplifying its implementation.

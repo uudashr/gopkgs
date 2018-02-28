@@ -18,6 +18,8 @@ Use -format to custom the output using template syntax. The struct being passed 
 		ImportPath string // import path of package in dir
 		Name       string // package name
 	}
+
+Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the workDir.
 `
 
 func usage() {
