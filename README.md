@@ -8,7 +8,7 @@ This are alternative to `go list all`, it just faster.
 
 ## Installation
 
-`$ go get github.com/uudashr/gopkgs/cmd/gopkgs`
+`$ go get -u github.com/uudashr/gopkgs/cmd/gopkgs`
 
 ## Usage
 ```
@@ -18,6 +18,8 @@ Usage of gopkgs:
     	custom output format (default "{{.ImportPath}}")
   -help
     	show this message
+  -workDir string
+    	importable packages only for workDir
 
 
 Use -format to custom the output using template syntax. The struct being passed to template is:
