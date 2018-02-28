@@ -41,6 +41,9 @@ func Packages(workDir string) (map[string]*Pkg, error) {
 	for _, srcDir := range build.Default.SrcDirs() {
 		err := walk.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
+				if os.IsPermission(err) {
+					return nil
+				}
 				return err
 			}
 
