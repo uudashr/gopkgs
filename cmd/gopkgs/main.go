@@ -36,9 +36,10 @@ func init() {
 
 func main() {
 	var (
-		flagFormat  = flag.String("format", "{{.ImportPath}}", "custom output format")
-		flagWorkDir = flag.String("workDir", "", "importable packages only for workDir")
-		flagHelp    = flag.Bool("help", false, "show this message")
+		flagFormat   = flag.String("format", "{{.ImportPath}}", "custom output format")
+		flagWorkDir  = flag.String("workDir", "", "importable packages only for workDir")
+		flagNoVendor = flag.Bool("no-vendor", false, "exclude vendor dependencies except under workDir (if specified)")
+		flagHelp     = flag.Bool("help", false, "show this message")
 	)
 
 	flag.Parse()
@@ -53,7 +54,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	pkgs, err := gopkgs.Packages(*flagWorkDir)
+	pkgs, err := gopkgs.Packages(gopkgs.Options{
+		WorkDir:  *flagWorkDir,
+		NoVendor: *flagNoVendor,
+	})
 	if err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)

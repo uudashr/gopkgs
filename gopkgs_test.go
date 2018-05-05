@@ -8,7 +8,7 @@ func TestPackages(t *testing.T) {
 		t.Skip("Skip non-short mode")
 	}
 
-	pkgs, err := gopkgs.Packages("")
+	pkgs, err := gopkgs.Packages(gopkgs.Options{})
 	if err != nil {
 		t.Fatal("fail getting packages:", err)
 	}
@@ -20,7 +20,7 @@ func TestPackages(t *testing.T) {
 
 func BenchmarkPackages(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		if _, err := gopkgs.Packages(""); err != nil {
+		if _, err := gopkgs.Packages(gopkgs.Options{}); err != nil {
 			b.Fatal("err:", err)
 		}
 	}

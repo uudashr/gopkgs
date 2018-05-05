@@ -19,16 +19,20 @@ type Pkg struct {
 	Name       string // package name
 }
 
+// Options for retrieve packages.
+type Options struct {
+	WorkDir  string // Will return importable package under WorkDir. Any vendor dependencies outside the WorkDir will be ignored.
+	NoVendor bool   // Will not retrieve vendor dependencies, except inside WorkDir (if specified)
+}
+
 // Packages available to import.
-//
-// workDir availibility will return importable packages only based
-// on workDir (vendor packages outside the workDir will be ignored).
-func Packages(workDir string) (map[string]*Pkg, error) {
+func Packages(opts Options) (map[string]*Pkg, error) {
 	fset := token.NewFileSet()
 
 	var pkgsMu sync.Mutex
 	pkgs := make(map[string]*Pkg)
 
+	workDir := opts.WorkDir
 	if workDir != "" && !filepath.IsAbs(workDir) {
 		wd, err := filepath.Abs(workDir)
 		if err != nil {
@@ -57,8 +61,22 @@ func Packages(workDir string) (map[string]*Pkg, error) {
 					return walk.SkipDir
 				}
 
-				if name == "vendor" && workDir != "" && workDir != pathDir {
-					return walk.SkipDir
+				// if name == "vendor" && workDir != "" && workDir != pathDir {
+				// 	return walk.SkipDir
+				// }
+
+				if name == "vendor" {
+					if workDir != "" {
+						if workDir != pathDir {
+							return walk.SkipDir
+						}
+
+						return nil
+					}
+
+					if opts.NoVendor {
+						return walk.SkipDir
+					}
 				}
 
 				return nil
