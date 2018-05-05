@@ -18,6 +18,8 @@ Usage of gopkgs:
     	custom output format (default "{{.ImportPath}}")
   -help
     	show this message
+  -no-vendor
+    	exclude vendor dependencies except under workDir (if specified)
   -workDir string
     	importable packages only for workDir
 
