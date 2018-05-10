@@ -43,7 +43,7 @@ func main() {
 	)
 
 	flag.Parse()
-	if len(flag.Args()) > 0 || *flagHelp {
+	if *flagHelp {
 		flag.Usage()
 		os.Exit(1)
 	}
