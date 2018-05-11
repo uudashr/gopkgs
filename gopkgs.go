@@ -61,13 +61,9 @@ func Packages(opts Options) (map[string]*Pkg, error) {
 					return walk.SkipDir
 				}
 
-				// if name == "vendor" && workDir != "" && workDir != pathDir {
-				// 	return walk.SkipDir
-				// }
-
 				if name == "vendor" {
 					if workDir != "" {
-						if workDir != pathDir {
+						if !visibleVendor(workDir, pathDir) {
 							return walk.SkipDir
 						}
 
