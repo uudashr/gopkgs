@@ -22,5 +22,5 @@
 
 
 [[constraint]]
-  branch = "master"
-  name = "github.com/MichaelTJones/walk"
+  name = "github.com/karrick/godirwalk"
+  version = "1.7.0"

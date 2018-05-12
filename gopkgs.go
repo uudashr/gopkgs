@@ -4,12 +4,11 @@ import (
 	"go/build"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 	"sync"
 
-	"github.com/MichaelTJones/walk"
+	"github.com/karrick/godirwalk"
 )
 
 // Pkg hold the information of the package.
@@ -25,12 +24,17 @@ type Options struct {
 	NoVendor bool   // Will not retrieve vendor dependencies, except inside WorkDir (if specified)
 }
 
+type goFile struct {
+	path   string
+	srcDir string
+}
+
 // Packages available to import.
-func Packages(opts Options) (map[string]*Pkg, error) {
+func Packages(opts Options) (map[string]Pkg, error) {
 	fset := token.NewFileSet()
 
 	var pkgsMu sync.Mutex
-	pkgs := make(map[string]*Pkg)
+	pkgs := make(map[string]Pkg)
 
 	workDir := opts.WorkDir
 	if workDir != "" && !filepath.IsAbs(workDir) {
@@ -42,76 +46,85 @@ func Packages(opts Options) (map[string]*Pkg, error) {
 		workDir = wd
 	}
 
-	for _, srcDir := range build.Default.SrcDirs() {
-		err := walk.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				if os.IsPermission(err) {
-					return nil
+	goFileCh := make(chan goFile, 10000)
+	var wg sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			for gf := range goFileCh {
+				pathDir := filepath.Dir(gf.path)
+				src, err := parser.ParseFile(fset, gf.path, nil, parser.PackageClauseOnly)
+				if err != nil {
+					// skip unparseable go file
+					continue
 				}
-				return err
+
+				pkgDir := pathDir
+				pkgName := src.Name.Name
+				if pkgName == "main" {
+					// skip main package
+					continue
+				}
+
+				pkgsMu.Lock()
+				if _, ok := pkgs[pkgDir]; !ok {
+					pkgs[pkgDir] = Pkg{
+						Name:       pkgName,
+						ImportPath: filepath.ToSlash(pkgDir[len(gf.srcDir)+len("/"):]),
+						Dir:        pkgDir,
+					}
+				}
+				pkgsMu.Unlock()
 			}
+			wg.Done()
+		}()
+	}
 
-			// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
-			// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
+	for _, srcDir := range build.Default.SrcDirs() {
+		err := godirwalk.Walk(srcDir, &godirwalk.Options{
+			Callback: func(osPathname string, de *godirwalk.Dirent) error {
+				// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
+				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
-			name := info.Name()
-			pathDir := filepath.Dir(path)
-			if info.IsDir() {
-				if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
-					return walk.SkipDir
-				}
+				name := de.Name()
+				pathDir := filepath.Dir(osPathname)
+				if de.IsDir() {
+					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+						return filepath.SkipDir
+					}
 
-				if name == "vendor" {
-					if workDir != "" {
-						if !visibleVendor(workDir, pathDir) {
-							return walk.SkipDir
+					if name == "vendor" {
+						if workDir != "" {
+							if workDir != pathDir {
+								return filepath.SkipDir
+							}
+
+							return nil
 						}
 
-						return nil
+						if opts.NoVendor {
+							return filepath.SkipDir
+						}
 					}
 
-					if opts.NoVendor {
-						return walk.SkipDir
-					}
+					return nil
 				}
 
-				return nil
-			}
-
-			if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
-				return nil
-			}
-
-			if pathDir == srcDir {
-				// Cannot put files on $GOPATH/src or $GOROOT/src.
-				return nil
-			}
-
-			filename := path
-
-			src, err := parser.ParseFile(fset, filename, nil, parser.PackageClauseOnly)
-			if err != nil {
-				// skip unparseable go file
-				return nil
-			}
-
-			pkgDir := pathDir
-			pkgName := src.Name.Name
-			if pkgName == "main" {
-				// skip main package
-				return nil
-			}
-
-			pkgsMu.Lock()
-			if _, ok := pkgs[pkgDir]; !ok {
-				pkgs[pkgDir] = &Pkg{
-					Name:       pkgName,
-					ImportPath: filepath.ToSlash(pkgDir[len(srcDir)+len("/"):]),
-					Dir:        pkgDir,
+				if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+					return nil
 				}
-			}
-			pkgsMu.Unlock()
-			return nil
+
+				if pathDir == srcDir {
+					// Cannot put files on $GOPATH/src or $GOROOT/src.
+					return nil
+				}
+
+				goFileCh <- goFile{
+					srcDir: srcDir,
+					path:   osPathname,
+				}
+				return nil
+			},
 		})
 
 		if err != nil {
@@ -119,5 +132,7 @@ func Packages(opts Options) (map[string]*Pkg, error) {
 		}
 	}
 
+	close(goFileCh)
+	wg.Wait()
 	return pkgs, nil
 }

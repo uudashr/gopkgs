@@ -2,14 +2,20 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/MichaelTJones/walk"
+  name = "github.com/karrick/godirwalk"
   packages = ["."]
-  revision = "4748e29d5718c2df4028a6543edf86fd8cc0f881"
+  revision = "500f500f39a3c6f8ef40192026cac7c0ee71e7e3"
+  version = "v1.7.0"
+
+[[projects]]
+  name = "github.com/pkg/errors"
+  packages = ["."]
+  revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
+  version = "v0.8.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "28e7bfd082177169e53953b20c924599de3fdda864e1782fd1911a9d099fd982"
+  inputs-digest = "30864e82818313d20641ed8ca90369c7477f65f71d178ebc0e35ecef30b55e3b"
   solver-name = "gps-cdcl"
   solver-version = 1
