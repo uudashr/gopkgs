@@ -14,6 +14,8 @@ This are alternative to `go list all`, it just faster.
 ```
 $ gopkgs -help
 Usage of gopkgs:
+  -follow-symlink
+    	follow symbolic links
   -format string
     	custom output format (default "{{.ImportPath}}")
   -help
@@ -31,7 +33,7 @@ Use -format to custom the output using template syntax. The struct being passed 
         Name       string // package name
     }
 
-Use -workDir={path} to speed up the package search. This will ignore any vendor packages not visible to workDir.
+Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the workDir.
 ```
 
 ### Example
