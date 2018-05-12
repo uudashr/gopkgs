@@ -95,7 +95,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 
 					if name == "vendor" {
 						if workDir != "" {
-							if workDir != pathDir {
+							if !visibleVendor(workDir, pathDir) {
 								return filepath.SkipDir
 							}
 
