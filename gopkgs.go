@@ -20,9 +20,8 @@ type Pkg struct {
 
 // Options for retrieve packages.
 type Options struct {
-	WorkDir       string // Will return importable package under WorkDir. Any vendor dependencies outside the WorkDir will be ignored.
-	NoVendor      bool   // Will not retrieve vendor dependencies, except inside WorkDir (if specified)
-	FollowSymlink bool   // Will follow symbolic links.
+	WorkDir  string // Will return importable package under WorkDir. Any vendor dependencies outside the WorkDir will be ignored.
+	NoVendor bool   // Will not retrieve vendor dependencies, except inside WorkDir (if specified)
 }
 
 type goFile struct {
@@ -83,7 +82,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 
 	for _, srcDir := range build.Default.SrcDirs() {
 		err := godirwalk.Walk(srcDir, &godirwalk.Options{
-			FollowSymbolicLinks: opts.FollowSymlink,
+			FollowSymbolicLinks: true,
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
 				// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists

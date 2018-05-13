@@ -13,9 +13,6 @@ This are alternative to `go list all`, it just faster.
 ## Usage
 ```
 $ gopkgs -help
-Usage of gopkgs:
-  -follow-symlink
-    	follow symbolic links
   -format string
     	custom output format (default "{{.ImportPath}}")
   -help
