@@ -2,21 +2,20 @@
 
 
 [[projects]]
-  branch = "fix-symlink-to-abs-dir"
-  name = "github.com/karrick/godirwalk"
-  packages = ["."]
-  revision = "4588b682d3dc2122265bdce0a67202fb0392c22b"
-  source = "github.com/uudashr/godirwalk"
-
-[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
+[[projects]]
+  branch = "fix-symlink-to-abs-dir"
+  name = "github.com/uudashr/godirwalk"
+  packages = ["."]
+  revision = "4588b682d3dc2122265bdce0a67202fb0392c22b"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9c061267211afc9feb21b3900a6db11ad8895f28d0b40bc58234156597375621"
+  inputs-digest = "57c465f0b589a4f24d41d3fcf18ac110a1a02f8ec5e8723f6a509c05e7317d15"
   solver-name = "gps-cdcl"
   solver-version = 1
