@@ -20,7 +20,8 @@
 #  name = "github.com/x/y"
 #  version = "2.4.0"
 
-
+# Wait for PR https://github.com/karrick/godirwalk/pull/4
 [[constraint]]
   name = "github.com/karrick/godirwalk"
-  version = "1.7.0"
+  branch = "fix-symlink-to-abs-dir"
+  source = "github.com/uudashr/godirwalk"
