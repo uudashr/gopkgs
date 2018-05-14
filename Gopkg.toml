@@ -22,5 +22,6 @@
 
 # Wait for PR https://github.com/karrick/godirwalk/pull/4
 [[constraint]]
-  name = "github.com/uudashr/godirwalk"
+  name = "github.com/karrick/godirwalk"
+  source = "github.com/uudashr/godirwalk"
   branch = "fix-symlink-to-abs-dir"

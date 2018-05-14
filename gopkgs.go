@@ -8,7 +8,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/uudashr/godirwalk"
+	"github.com/karrick/godirwalk"
 )
 
 // Pkg hold the information of the package.
