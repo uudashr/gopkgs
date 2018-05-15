@@ -26,7 +26,16 @@ type Options struct {
 
 type goFile struct {
 	path   string
+	dir    string
 	srcDir string
+}
+
+func readPackageName(fset *token.FileSet, filename string) (string, error) {
+	src, err := parser.ParseFile(fset, filename, nil, parser.PackageClauseOnly)
+	if err != nil {
+		return "", err
+	}
+	return src.Name.Name, nil
 }
 
 // Packages available to import.
@@ -52,15 +61,13 @@ func Packages(opts Options) (map[string]Pkg, error) {
 		wg.Add(1)
 		go func() {
 			for gf := range goFileCh {
-				pathDir := filepath.Dir(gf.path)
-				src, err := parser.ParseFile(fset, gf.path, nil, parser.PackageClauseOnly)
+				pkgName, err := readPackageName(fset, gf.path)
 				if err != nil {
-					// skip unparseable go file
+					// skip unparseable file
 					continue
 				}
 
-				pkgDir := pathDir
-				pkgName := src.Name.Name
+				pkgDir := gf.dir
 				if pkgName == "main" {
 					// skip main package
 					continue
@@ -127,8 +134,9 @@ func Packages(opts Options) (map[string]Pkg, error) {
 				}
 
 				goFileCh <- goFile{
-					srcDir: srcDir,
 					path:   osPathname,
+					dir:    pathDir,
+					srcDir: srcDir,
 				}
 				return nil
 			},
