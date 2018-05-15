@@ -46,13 +46,23 @@ func readPackageName(filename string) (string, error) {
 	s := bufio.NewScanner(f)
 	var inComment bool
 	for s.Scan() {
-		line := s.Text()
-		if strings.HasPrefix(line, "/*") {
-			inComment = true
+		line := strings.TrimSpace(s.Text())
+
+		if line == "" {
+			continue
 		}
 
 		if !inComment {
-			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "/*") {
+				inComment = true
+				continue
+			}
+
+			if strings.HasPrefix(line, "//") {
+				// skip inline comment
+				continue
+			}
+
 			if strings.HasPrefix(line, "package") {
 				ls := strings.Split(line, " ")
 				if len(ls) < 2 {
@@ -61,12 +71,11 @@ func readPackageName(filename string) (string, error) {
 				return ls[1], nil
 			}
 
-			if !strings.HasPrefix(line, "//") && line != "" {
-				// package should be found first
-				return "", errors.New("invalid go file, expect package declaration")
-			}
+			// package should be found first
+			return "", errors.New("invalid go file, expect package declaration")
 		}
 
+		// inComment = true
 		if strings.HasSuffix(line, "*/") {
 			inComment = false
 		}
