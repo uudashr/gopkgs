@@ -84,11 +84,17 @@ func Packages(opts Options) (map[string]Pkg, error) {
 		err := godirwalk.Walk(srcDir, &godirwalk.Options{
 			FollowSymbolicLinks: true,
 			Callback: func(osPathname string, de *godirwalk.Dirent) error {
+				name := de.Name()
+				pathDir := filepath.Dir(osPathname)
+
+				// Symlink not supported by go
+				if de.IsSymlink() {
+					return filepath.SkipDir
+				}
+
 				// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
-				name := de.Name()
-				pathDir := filepath.Dir(osPathname)
 				if de.IsDir() {
 					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
 						return filepath.SkipDir
