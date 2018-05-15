@@ -1,9 +1,10 @@
 package gopkgs
 
 import (
+	"bufio"
+	"errors"
 	"go/build"
-	"go/parser"
-	"go/token"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -30,18 +31,45 @@ type goFile struct {
 	srcDir string
 }
 
-func readPackageName(fset *token.FileSet, filename string) (string, error) {
-	src, err := parser.ParseFile(fset, filename, nil, parser.PackageClauseOnly)
+func readPackageName(filename string) (string, error) {
+	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
-	return src.Name.Name, nil
+
+	defer func() {
+		if err := f.Close(); err != nil {
+			panic(err)
+		}
+	}()
+
+	s := bufio.NewScanner(f)
+	var inComment bool
+	for s.Scan() {
+		line := s.Text()
+		if strings.HasPrefix(line, "/*") {
+			inComment = true
+		}
+
+		if strings.HasSuffix(line, "*/") {
+			inComment = false
+		}
+
+		if !inComment && strings.HasPrefix(line, "package") {
+			line = strings.TrimSpace(line)
+			ls := strings.Split(line, " ")
+			if len(ls) < 2 {
+				return "", errors.New("expect pattern 'package <name>':" + line)
+			}
+			return ls[1], nil
+		}
+	}
+
+	return "", errors.New("cannot find package information")
 }
 
 // Packages available to import.
 func Packages(opts Options) (map[string]Pkg, error) {
-	fset := token.NewFileSet()
-
 	var pkgsMu sync.Mutex
 	pkgs := make(map[string]Pkg)
 
@@ -61,7 +89,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 		wg.Add(1)
 		go func() {
 			for gf := range goFileCh {
-				pkgName, err := readPackageName(fset, gf.path)
+				pkgName, err := readPackageName(gf.path)
 				if err != nil {
 					// skip unparseable file
 					continue
