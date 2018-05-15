@@ -51,17 +51,24 @@ func readPackageName(filename string) (string, error) {
 			inComment = true
 		}
 
-		if strings.HasSuffix(line, "*/") {
-			inComment = false
+		if !inComment {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "package") {
+				ls := strings.Split(line, " ")
+				if len(ls) < 2 {
+					return "", errors.New("expect pattern 'package <name>':" + line)
+				}
+				return ls[1], nil
+			}
+
+			if !strings.HasPrefix(line, "//") && line != "" {
+				// package should be found first
+				return "", errors.New("invalid go file, expect package declaration")
+			}
 		}
 
-		if !inComment && strings.HasPrefix(line, "package") {
-			line = strings.TrimSpace(line)
-			ls := strings.Split(line, " ")
-			if len(ls) < 2 {
-				return "", errors.New("expect pattern 'package <name>':" + line)
-			}
-			return ls[1], nil
+		if strings.HasSuffix(line, "*/") {
+			inComment = false
 		}
 	}
 
