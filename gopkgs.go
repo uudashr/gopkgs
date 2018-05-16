@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"github.com/karrick/godirwalk"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Pkg hold the information of the package.
@@ -183,6 +184,14 @@ func Packages(opts Options) (map[string]Pkg, error) {
 					srcDir: srcDir,
 				}
 				return nil
+			},
+			ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
+				err = pkgerrors.Cause(err)
+				if v, ok := err.(*os.PathError); ok && os.IsNotExist(v.Err) {
+					return godirwalk.SkipNode
+				}
+
+				return godirwalk.Halt
 			},
 		})
 
