@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"runtime/pprof"
+	"runtime/trace"
 	"text/tabwriter"
 
 	"github.com/uudashr/gopkgs"
@@ -36,16 +38,66 @@ func init() {
 
 func main() {
 	var (
-		flagFormat   = flag.String("format", "{{.ImportPath}}", "custom output format")
-		flagWorkDir  = flag.String("workDir", "", "importable packages only for workDir")
-		flagNoVendor = flag.Bool("no-vendor", false, "exclude vendor dependencies except under workDir (if specified)")
-		flagHelp     = flag.Bool("help", false, "show this message")
+		flagFormat         = flag.String("format", "{{.ImportPath}}", "custom output format")
+		flagWorkDir        = flag.String("workDir", "", "importable packages only for workDir")
+		flagNoVendor       = flag.Bool("no-vendor", false, "exclude vendor dependencies except under workDir (if specified)")
+		flagHelp           = flag.Bool("help", false, "show this message")
+		flagPerfCPUProfile *string
+		flagPerfTrace      *string
 	)
+
+	devMode := os.Getenv("DEV_MODE")
+	if devMode == "1" || devMode == "true" {
+		flagPerfCPUProfile = flag.String("perf-cpuprofile", "", "Write the CPU profile to a file")
+		flagPerfTrace = flag.String("perf-trace", "", "Write an execution trace to a file")
+	}
 
 	flag.Parse()
 	if len(flag.Args()) > 0 || *flagHelp {
 		flag.Usage()
 		os.Exit(1)
+	}
+
+	if flagPerfCPUProfile != nil && *flagPerfCPUProfile != "" {
+		pf, err := os.Create(*flagPerfCPUProfile)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		defer func() {
+			if err = pf.Close(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+		}()
+
+		if err = pprof.StartCPUProfile(pf); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		defer pprof.StopCPUProfile()
+	}
+
+	if flagPerfTrace != nil && *flagPerfTrace != "" {
+		tf, err := os.Create(*flagPerfTrace)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		defer func() {
+			if err = tf.Close(); err != nil {
+				fmt.Fprintln(os.Stderr, err)
+			}
+		}()
+
+		if err = trace.Start(tf); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+
+		defer trace.Stop()
 	}
 
 	tpl, err := template.New("out").Parse(*flagFormat)
