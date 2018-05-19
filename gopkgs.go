@@ -89,30 +89,20 @@ func readPackageName(filename string) (string, error) {
 func Packages(opts Options) (map[string]Pkg, error) {
 	var pkgsMu sync.Mutex
 	pkgs := make(map[string]Pkg)
-
-	workDir := opts.WorkDir
-	if workDir != "" && !filepath.IsAbs(workDir) {
-		wd, err := filepath.Abs(workDir)
-		if err != nil {
-			return nil, err
-		}
-
-		workDir = wd
-	}
-
-	goFileCh := make(chan goFile, 10000)
 	var wg sync.WaitGroup
+
+	filec, errc := listFiles(opts)
 	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		go func() {
-			for gf := range goFileCh {
-				pkgName, err := readPackageName(gf.path)
+			for f := range filec {
+				pkgName, err := readPackageName(f.path)
 				if err != nil {
 					// skip unparseable file
 					continue
 				}
 
-				pkgDir := gf.dir
+				pkgDir := f.dir
 				if pkgName == "main" {
 					// skip main package
 					continue
@@ -122,7 +112,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 				if _, ok := pkgs[pkgDir]; !ok {
 					pkgs[pkgDir] = Pkg{
 						Name:       pkgName,
-						ImportPath: filepath.ToSlash(pkgDir[len(gf.srcDir)+len("/"):]),
+						ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
 						Dir:        pkgDir,
 					}
 				}
@@ -132,75 +122,103 @@ func Packages(opts Options) (map[string]Pkg, error) {
 		}()
 	}
 
-	for _, srcDir := range build.Default.SrcDirs() {
-		err := godirwalk.Walk(srcDir, &godirwalk.Options{
-			FollowSymbolicLinks: true,
-			Callback: func(osPathname string, de *godirwalk.Dirent) error {
-				name := de.Name()
-				pathDir := filepath.Dir(osPathname)
+	wg.Wait()
+	if err := <-errc; err != nil {
+		return nil, err
+	}
 
-				// Symlink not supported by go
-				if de.IsSymlink() {
-					return filepath.SkipDir
-				}
+	return pkgs, nil
+}
 
-				// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
-				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
+func listFiles(opts Options) (<-chan goFile, <-chan error) {
+	filec := make(chan goFile, 10000)
+	errc := make(chan error, 1)
 
-				if de.IsDir() {
-					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+	go func() {
+		defer func() {
+			close(filec)
+			close(errc)
+		}()
+
+		workDir := opts.WorkDir
+		if workDir != "" && !filepath.IsAbs(workDir) {
+			wd, err := filepath.Abs(workDir)
+			if err != nil {
+				errc <- err
+				return
+			}
+
+			workDir = wd
+		}
+
+		for _, srcDir := range build.Default.SrcDirs() {
+			err := godirwalk.Walk(srcDir, &godirwalk.Options{
+				FollowSymbolicLinks: true,
+				Callback: func(osPathname string, de *godirwalk.Dirent) error {
+					name := de.Name()
+					pathDir := filepath.Dir(osPathname)
+
+					// Symlink not supported by go
+					if de.IsSymlink() {
 						return filepath.SkipDir
 					}
 
-					if name == "vendor" {
-						if workDir != "" {
-							if !visibleVendor(workDir, pathDir) {
-								return filepath.SkipDir
-							}
+					// Ignore files begin with "_", "." "_test.go" and directory named "testdata"
+					// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
-							return nil
-						}
-
-						if opts.NoVendor {
+					if de.IsDir() {
+						if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
 							return filepath.SkipDir
 						}
+
+						if name == "vendor" {
+							if workDir != "" {
+								if !visibleVendor(workDir, pathDir) {
+									return filepath.SkipDir
+								}
+
+								return nil
+							}
+
+							if opts.NoVendor {
+								return filepath.SkipDir
+							}
+						}
+
+						return nil
 					}
 
+					if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
+						return nil
+					}
+
+					if pathDir == srcDir {
+						// Cannot put files on $GOPATH/src or $GOROOT/src.
+						return nil
+					}
+
+					filec <- goFile{
+						path:   osPathname,
+						dir:    pathDir,
+						srcDir: srcDir,
+					}
 					return nil
-				}
+				},
+				ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
+					err = pkgerrors.Cause(err)
+					if v, ok := err.(*os.PathError); ok && os.IsNotExist(v.Err) {
+						return godirwalk.SkipNode
+					}
 
-				if name[0] == '.' || !strings.HasSuffix(name, ".go") || strings.HasSuffix(name, "_test.go") {
-					return nil
-				}
+					return godirwalk.Halt
+				},
+			})
 
-				if pathDir == srcDir {
-					// Cannot put files on $GOPATH/src or $GOROOT/src.
-					return nil
-				}
-
-				goFileCh <- goFile{
-					path:   osPathname,
-					dir:    pathDir,
-					srcDir: srcDir,
-				}
-				return nil
-			},
-			ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
-				err = pkgerrors.Cause(err)
-				if v, ok := err.(*os.PathError); ok && os.IsNotExist(v.Err) {
-					return godirwalk.SkipNode
-				}
-
-				return godirwalk.Halt
-			},
-		})
-
-		if err != nil {
-			return nil, err
+			if err != nil {
+				errc <- err
+				return
+			}
 		}
-	}
-
-	close(goFileCh)
-	wg.Wait()
-	return pkgs, nil
+	}()
+	return filec, errc
 }

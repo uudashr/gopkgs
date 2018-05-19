@@ -19,8 +19,8 @@ install:
   - make vendor
 
 before_script:
-  # - make lint-prepare
+  - make lint-prepare
 
 script:
-  # - make lint
+  - make lint
   - make test

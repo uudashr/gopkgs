@@ -35,7 +35,12 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@gometalinter --vendor --cyclo-over=20 --deadline=2m ./...
+	@gometalinter \
+		--exclude='error return value not checked.*Log.*\(errcheck\)$$' \
+		--exclude='Errors unhandled.,LOW,HIGH \(gas\)$$' \
+		--vendor \
+		--cyclo-over=25 \
+		--deadline=2m ./...
 
 # Testing
 .PHONY: test
