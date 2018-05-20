@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"go/build"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -32,17 +33,17 @@ type goFile struct {
 	srcDir string
 }
 
+func mustClose(c io.Closer) {
+	if err := c.Close(); err != nil {
+		panic(err)
+	}
+}
+
 func readPackageName(filename string) (string, error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
 	}
-
-	defer func() {
-		if err := f.Close(); err != nil {
-			panic(err)
-		}
-	}()
 
 	s := bufio.NewScanner(f)
 	var inComment bool
@@ -67,12 +68,16 @@ func readPackageName(filename string) (string, error) {
 			if strings.HasPrefix(line, "package") {
 				ls := strings.Split(line, " ")
 				if len(ls) < 2 {
+					mustClose(f)
 					return "", errors.New("expect pattern 'package <name>':" + line)
 				}
+
+				mustClose(f)
 				return ls[1], nil
 			}
 
 			// package should be found first
+			mustClose(f)
 			return "", errors.New("invalid go file, expect package declaration")
 		}
 
@@ -82,6 +87,7 @@ func readPackageName(filename string) (string, error) {
 		}
 	}
 
+	mustClose(f)
 	return "", errors.New("cannot find package information")
 }
 
