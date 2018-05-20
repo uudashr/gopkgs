@@ -93,7 +93,7 @@ func readPackageName(filename string) (string, error) {
 
 // Packages available to import.
 func Packages(opts Options) (map[string]Pkg, error) {
-	var pkgsMu sync.Mutex
+	var mu sync.RWMutex
 	pkgs := make(map[string]Pkg)
 	var wg sync.WaitGroup
 
@@ -102,27 +102,36 @@ func Packages(opts Options) (map[string]Pkg, error) {
 		wg.Add(1)
 		go func() {
 			for f := range filec {
+				pkgDir := f.dir
+				mu.RLock()
+				_, found := pkgs[pkgDir]
+				mu.RUnlock()
+
+				if found {
+					// already have this package, skip
+					continue
+				}
+
 				pkgName, err := readPackageName(f.path)
 				if err != nil {
 					// skip unparseable file
 					continue
 				}
 
-				pkgDir := f.dir
 				if pkgName == "main" {
 					// skip main package
 					continue
 				}
 
-				pkgsMu.Lock()
-				if _, ok := pkgs[pkgDir]; !ok {
+				mu.Lock()
+				if _, found := pkgs[pkgDir]; !found {
 					pkgs[pkgDir] = Pkg{
 						Name:       pkgName,
 						ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
 						Dir:        pkgDir,
 					}
 				}
-				pkgsMu.Unlock()
+				mu.Unlock()
 			}
 			wg.Done()
 		}()
