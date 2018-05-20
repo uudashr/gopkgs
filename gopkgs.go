@@ -8,7 +8,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"github.com/karrick/godirwalk"
 	pkgerrors "github.com/pkg/errors"
@@ -93,15 +92,12 @@ func readPackageName(filename string) (string, error) {
 
 // Packages available to import.
 func Packages(opts Options) (map[string]Pkg, error) {
-	var mu sync.RWMutex
 	pkgs := make(map[string]Pkg)
 
 	filec, errc := listFiles(opts)
 	for f := range filec {
 		pkgDir := f.dir
-		mu.RLock()
 		_, found := pkgs[pkgDir]
-		mu.RUnlock()
 
 		if found {
 			// already have this package, skip
@@ -119,7 +115,6 @@ func Packages(opts Options) (map[string]Pkg, error) {
 			continue
 		}
 
-		mu.Lock()
 		if _, found := pkgs[pkgDir]; !found {
 			pkgs[pkgDir] = Pkg{
 				Name:       pkgName,
@@ -127,7 +122,6 @@ func Packages(opts Options) (map[string]Pkg, error) {
 				Dir:        pkgDir,
 			}
 		}
-		mu.Unlock()
 	}
 
 	if err := <-errc; err != nil {
