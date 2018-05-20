@@ -95,49 +95,41 @@ func readPackageName(filename string) (string, error) {
 func Packages(opts Options) (map[string]Pkg, error) {
 	var mu sync.RWMutex
 	pkgs := make(map[string]Pkg)
-	var wg sync.WaitGroup
 
 	filec, errc := listFiles(opts)
-	for i := 0; i < 2; i++ {
-		wg.Add(1)
-		go func() {
-			for f := range filec {
-				pkgDir := f.dir
-				mu.RLock()
-				_, found := pkgs[pkgDir]
-				mu.RUnlock()
+	for f := range filec {
+		pkgDir := f.dir
+		mu.RLock()
+		_, found := pkgs[pkgDir]
+		mu.RUnlock()
 
-				if found {
-					// already have this package, skip
-					continue
-				}
+		if found {
+			// already have this package, skip
+			continue
+		}
 
-				pkgName, err := readPackageName(f.path)
-				if err != nil {
-					// skip unparseable file
-					continue
-				}
+		pkgName, err := readPackageName(f.path)
+		if err != nil {
+			// skip unparseable file
+			continue
+		}
 
-				if pkgName == "main" {
-					// skip main package
-					continue
-				}
+		if pkgName == "main" {
+			// skip main package
+			continue
+		}
 
-				mu.Lock()
-				if _, found := pkgs[pkgDir]; !found {
-					pkgs[pkgDir] = Pkg{
-						Name:       pkgName,
-						ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
-						Dir:        pkgDir,
-					}
-				}
-				mu.Unlock()
+		mu.Lock()
+		if _, found := pkgs[pkgDir]; !found {
+			pkgs[pkgDir] = Pkg{
+				Name:       pkgName,
+				ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
+				Dir:        pkgDir,
 			}
-			wg.Done()
-		}()
+		}
+		mu.Unlock()
 	}
 
-	wg.Wait()
 	if err := <-errc; err != nil {
 		return nil, err
 	}
