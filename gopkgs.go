@@ -115,12 +115,10 @@ func Packages(opts Options) (map[string]Pkg, error) {
 			continue
 		}
 
-		if _, found := pkgs[pkgDir]; !found {
-			pkgs[pkgDir] = Pkg{
-				Name:       pkgName,
-				ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
-				Dir:        pkgDir,
-			}
+		pkgs[pkgDir] = Pkg{
+			Name:       pkgName,
+			ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
+			Dir:        pkgDir,
 		}
 	}
 
