@@ -97,9 +97,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 	filec, errc := listFiles(opts)
 	for f := range filec {
 		pkgDir := f.dir
-		_, found := pkgs[pkgDir]
-
-		if found {
+		if _, found := pkgs[pkgDir]; found {
 			// already have this package, skip
 			continue
 		}
