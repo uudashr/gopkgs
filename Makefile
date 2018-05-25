@@ -49,7 +49,7 @@ test: vendor
 
 .PHONY: bench
 bench: vendor
-	@go test -bench=.
+	@go test -run=none -bench=. -benchmem
 
 # Build and Installation
 .PHONY: install
