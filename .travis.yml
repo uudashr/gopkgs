@@ -19,8 +19,8 @@ install:
   - make vendor
 
 before_script:
-  - make lint-prepare
+  -  if [[ "$(go version)" =~= "go version go1.8"]] then echo Skipping golangci-lint; else make lint-prepare; fi
 
 script:
-  - make lint
+  -  if [[ "$(go version)" =~= "go version go1.8"]] then echo Skipping golangci-lint; else make lint; fi
   - make test
