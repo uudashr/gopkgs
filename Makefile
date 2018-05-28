@@ -29,18 +29,12 @@ clean-vendor:
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
-	@echo "Installing gometalinter"
-	@go get -u github.com/alecthomas/gometalinter
-	@gometalinter --install
+	@echo "Installing golangci-lint"
+	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 .PHONY: lint
 lint: vendor
-	@gometalinter \
-		--exclude='error return value not checked.*Log.*\(errcheck\)$$' \
-		--exclude='Errors unhandled.,LOW,HIGH \(gas\)$$' \
-		--vendor \
-		--cyclo-over=25 \
-		--deadline=2m ./...
+	@golangci-lint run ./..
 
 # Testing
 .PHONY: test
