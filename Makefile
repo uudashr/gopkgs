@@ -34,7 +34,16 @@ lint-prepare:
 
 .PHONY: lint
 lint: vendor
-	@golangci-lint run ./..
+	@golangci-lint run \
+		--exclude-use-default=false \
+		--enable=golint \
+		--enable=gocyclo \
+		--enable=goconst \
+		--enable=unconvert \
+		--exclude='^Error return value of `.*\.Log` is not checked$$' \
+		--exclude='^G104: Errors unhandled\.$$' \
+		--exclude='^G304: Potential file inclusion via variable$$' \
+		./...
 
 # Testing
 .PHONY: test
