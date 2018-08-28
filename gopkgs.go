@@ -115,7 +115,7 @@ func Packages(opts Options) (map[string]Pkg, error) {
 
 		pkgs[pkgDir] = Pkg{
 			Name:       pkgName,
-			ImportPath: filepath.ToSlash(pkgDir[len(f.srcDir)+len("/"):]),
+			ImportPath: getImportPath(pkgDir, f.srcDir, opts.WorkDir),
 			Dir:        pkgDir,
 		}
 	}
@@ -125,6 +125,27 @@ func Packages(opts Options) (map[string]Pkg, error) {
 	}
 
 	return pkgs, nil
+}
+
+func getImportPath(pkgDir, srcDir, workDir string) string {
+	pathPrefix := pkgDir[len(srcDir)+len("/"):]
+	if srcDir == workDir {
+		goModPath := srcDir + "/go.mod"
+		file, err := os.Open(goModPath)
+		if err == nil {
+			defer file.Close()
+
+			scanner := bufio.NewScanner(file)
+			for scanner.Scan() {
+				line := scanner.Text()
+				if strings.HasPrefix(line, "module") {
+					pathPrefix = strings.TrimLeft(line, "module ") + "/" + pathPrefix
+				}
+			}
+		}
+
+	}
+	return filepath.ToSlash(pathPrefix)
 }
 
 func listFiles(opts Options) (<-chan goFile, <-chan error) {
@@ -137,18 +158,27 @@ func listFiles(opts Options) (<-chan goFile, <-chan error) {
 			close(errc)
 		}()
 
+		srcDirs := build.Default.SrcDirs()
+
 		workDir := opts.WorkDir
-		if workDir != "" && !filepath.IsAbs(workDir) {
-			wd, err := filepath.Abs(workDir)
-			if err != nil {
-				errc <- err
-				return
+		if workDir != "" {
+			if !filepath.IsAbs(workDir) {
+				wd, err := filepath.Abs(workDir)
+				if err != nil {
+					errc <- err
+					return
+				}
+
+				workDir = wd
 			}
 
-			workDir = wd
+			goModFile := strings.TrimRight(workDir, "/") + "/" + "go.mod"
+			if _, err := os.Stat(goModFile); err != nil {
+				srcDirs = append(srcDirs, workDir)
+			}
 		}
 
-		for _, srcDir := range build.Default.SrcDirs() {
+		for _, srcDir := range srcDirs {
 			err := godirwalk.Walk(srcDir, &godirwalk.Options{
 				FollowSymbolicLinks: true,
 				Callback: func(osPathname string, de *godirwalk.Dirent) error {
