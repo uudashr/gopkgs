@@ -3,12 +3,12 @@ package gopkgs_test
 import "testing"
 import "github.com/uudashr/gopkgs"
 
-func TestPackages(t *testing.T) {
+func TestList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skip non-short mode")
 	}
 
-	pkgs, err := gopkgs.Packages(gopkgs.Options{})
+	pkgs, err := gopkgs.List(gopkgs.Options{})
 	if err != nil {
 		t.Fatal("fail getting packages:", err)
 	}
@@ -18,9 +18,9 @@ func TestPackages(t *testing.T) {
 	}
 }
 
-func BenchmarkPackages(b *testing.B) {
+func BenchmarkList(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		if _, err := gopkgs.Packages(gopkgs.Options{}); err != nil {
+		if _, err := gopkgs.List(gopkgs.Options{}); err != nil {
 			b.Fatal("err:", err)
 		}
 	}

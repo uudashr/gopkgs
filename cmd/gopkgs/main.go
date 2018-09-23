@@ -46,8 +46,8 @@ func main() {
 		flagPerfTrace      *string
 	)
 
-	devMode := os.Getenv("DEV_MODE")
-	if devMode == "1" || devMode == "true" {
+	envDevMode := os.Getenv("DEV_MODE")
+	if envDevMode == "1" || envDevMode == "true" || envDevMode == "on" {
 		flagPerfCPUProfile = flag.String("perf-cpuprofile", "", "Write the CPU profile to a file")
 		flagPerfTrace = flag.String("perf-trace", "", "Write an execution trace to a file")
 	}
@@ -106,7 +106,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	pkgs, err := gopkgs.Packages(gopkgs.Options{
+	pkgs, err := gopkgs.List(gopkgs.Options{
 		WorkDir:  *flagWorkDir,
 		NoVendor: *flagNoVendor,
 	})
