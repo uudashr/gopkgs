@@ -294,9 +294,10 @@ func collectModPkgs(m mod, out map[string]Pkg) error {
 			continue
 		}
 
+		// debug := true
 		importPath := m.path
 		if pkgDir != m.dir {
-			importPath += filepath.ToSlash(pkgDir[len(m.dir)+len("/"):])
+			importPath += filepath.ToSlash(pkgDir[len(m.dir):])
 		}
 
 		out[pkgDir] = Pkg{
