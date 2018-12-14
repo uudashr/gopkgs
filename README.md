@@ -4,7 +4,7 @@
 
 Gopkgs is tools that provide list of available Go packages that can be imported.
 
-This are alternative for `go list all`, it just faster.
+This is an alternative to `go list all`, just faster.
 
 ## Installation
 
