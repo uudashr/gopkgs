@@ -3,29 +3,6 @@ GOOS := $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
 OBJ_DIR := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(PACKAGE)
 
-# Dependencies Management
-.PHONY: vendor-prepare
-vendor-prepare:
-	@echo "Installing dep"
-	@go get -u -v github.com/golang/dep/cmd/dep
-
-Gopkg.lock: Gopkg.toml
-	@dep ensure -update $(DEP_OPTS)
-
-.PHONY: vendor-update
-vendor-update:
-	@dep ensure -update $(DEP_OPTS)
-
-vendor: Gopkg.lock
-	@dep ensure $(DEP_OPTS)
-
-vendor-optimize: vendor
-	@dep prune
-
-.PHONY: clean-vendor
-clean-vendor:
-	@rm -rf vendor
-
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
@@ -47,16 +24,16 @@ lint: vendor
 
 # Testing
 .PHONY: test
-test: vendor
+test: 
 	@go test $(TEST_OPTS)
 
 .PHONY: bench
-bench: vendor
+bench: 
 	@go test -run=none -bench=. -benchmem
 
 # Build and Installation
 .PHONY: install
-install: vendor
+install:
 	@go install ./...
 
 .PHONY: uninstall
