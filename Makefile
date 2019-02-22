@@ -10,7 +10,7 @@ lint-prepare:
 	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
 
 .PHONY: lint
-lint: vendor
+lint: 
 	@golangci-lint run \
 		--exclude-use-default=false \
 		--enable=golint \
