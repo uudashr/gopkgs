@@ -164,7 +164,7 @@ func listFiles(srcDir, workDir string, noVendor bool) (<-chan goFile, <-chan err
 			},
 			ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
 				err = pkgerrors.Cause(err)
-				if v, ok := err.(*os.PathError); ok && os.IsNotExist(v.Err) {
+				if v, ok := err.(*os.PathError); ok && (os.IsNotExist(v.Err) || os.IsPermission(v.Err)) {
 					return godirwalk.SkipNode
 				}
 
