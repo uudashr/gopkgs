@@ -362,8 +362,23 @@ type mod struct {
 	dir  string
 }
 
+const (
+	goflagsEnv         = "GOFLAGS"
+	modVendorFlagValue = "-mod=vendor"
+
+	normalFormatTpl           = "{{.Path}};{{.Dir}}"
+	modVendorExcludeFormatTpl = "{{if not .Indirect}}{{.Path}};{{.Dir}}{{end}}"
+)
+
 func listMods(workDir string) ([]mod, error) {
-	cmdArgs := []string{"list", "-m", "-f={{.Path}};{{.Dir}}", "all"}
+	goListformatFlagValue := "-f="
+	goflags := os.Getenv(goflagsEnv)
+	if strings.Contains(goflags, modVendorFlagValue) {
+		goListformatFlagValue += modVendorExcludeFormatTpl
+	} else {
+		goListformatFlagValue += normalFormatTpl
+	}
+	cmdArgs := []string{"list", "-m", goListformatFlagValue, "all"}
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
