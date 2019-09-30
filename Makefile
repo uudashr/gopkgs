@@ -2,14 +2,18 @@ PACKAGE := $(shell go list)
 GOOS := $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
 OBJ_DIR := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(PACKAGE)
-GOLANGCILINT := v1.19.1
+GOLANGCILINT ?= v1.19.1
 
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
 	@echo "Installing golangci-lint"
-	@[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin
-	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(GOPATH)/bin $(GOLANGCILINT)
+	@if [ ! $(GOLANGCILINT) == "none" ]; then \
+		[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin; \
+		curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCILINT); \
+	else \
+		echo "Skipping due to GOLANGCILINT='none'"; \
+	fi
 
 .PHONY: lint
 lint: 
