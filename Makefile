@@ -2,12 +2,13 @@ PACKAGE := $(shell go list)
 GOOS := $(shell go env GOOS)
 GOARCH = $(shell go env GOARCH)
 OBJ_DIR := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(PACKAGE)
+GOLANGCILINT := v1.19.1
 
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
 	@echo "Installing golangci-lint"
-	@go get -u github.com/golangci/golangci-lint/cmd/golangci-lint
+	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin $(GOLANGCILINT)
 
 .PHONY: lint
 lint: 
