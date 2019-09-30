@@ -8,7 +8,8 @@ GOLANGCILINT := v1.19.1
 .PHONY: lint-prepare
 lint-prepare:
 	@echo "Installing golangci-lint"
-	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(go env GOPATH)/bin $(GOLANGCILINT)
+	@[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin
+	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh| sh -s -- -b $(GOPATH)/bin $(GOLANGCILINT)
 
 .PHONY: lint
 lint: 
@@ -41,6 +42,4 @@ install:
 uninstall:
 	@echo "Removing binaries and libraries"
 	@go clean -i ./...
-	@if [ -d $(OBJ_DIR) ]; then \
-		rm -rf $(OBJ_DIR); \
-	fi
+	@[ -d $(OBJ_DIR) ] && rm -rf $(OBJ_DIR)
