@@ -5,7 +5,6 @@ OBJ_DIR := $(GOPATH)/pkg/$(GOOS)_$(GOARCH)/$(PACKAGE)
 GO_VERSION_MINOR := $(shell go version | sed -E 's/.*go([0-9]\.[0-9]+).*/\1/g')
 TRAVIS_GO_VERSION ?= $(GO_VERSION_MINOR).x
 
-GOLANGCI_LINT_1.8.x := none
 GOLANGCI_LINT_1.9.x := v1.10.2
 GOLANGCI_LINT_1.10.x := v1.15.0
 GOLANGCI_LINT_1.11.x := v1.17.1
@@ -17,13 +16,13 @@ GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
-	@if [ $(GOLANGCI_LINT) == "none" ]; then \
-		echo "Skipping due to GOLANGCI_LINT='none'"; \
-	else \
-		echo "Installing golangci-lint"; \
-		[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin; \
-		curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_LINT); \
+	@if [ $(GOLANGCI_LINT) == "" ]; then \
+		echo "Unknown Go version - using the latest linter"; \
+		GOLANGCI_LINT := v1.19.1; \
 	fi
+	@echo "Installing golangci-lint $(GOLANGCI_LINT)"
+	@[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin
+	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_LINT)
 
 .PHONY: lint
 lint: 

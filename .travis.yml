@@ -19,11 +19,11 @@ os:
   - osx
 
 install:
-  - GO111MODULE=on go mod download || go get -u
+  - env GO111MODULE=on go mod download || go get -u
 
 before_script:
-  - make lint-prepare
+  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.8 ]]; then echo 'Skipping golangci-lint install'; else make lint-prepare; fi
 
 script:
-  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.8 ]]; then echo 'Skipping golangci-lint'; else make lint; fi
-  - make test
+  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.8 ]]; then echo 'Skipping golangci-lint run'; else env GO111MODULE=on make lint; fi
+  - env GO111MODULE=on make test
