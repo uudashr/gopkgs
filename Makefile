@@ -17,7 +17,7 @@ GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
-	@if [ "$(GOLANGCI_LINT)" == "none" ]; then \
+	@if [[ "$(GOLANGCI_LINT)" == "none" ]]; then \
 		echo "Skipping due to GOLANGCI_LINT='none'"; \
 	else \
 		echo "Installing golangci-lint"; \

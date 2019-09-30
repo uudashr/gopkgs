@@ -19,7 +19,7 @@ os:
   - osx
 
 install:
-  - go mod download || go get -u
+  - GO111MODULE=on go mod download || go get -u
 
 before_script:
   - make lint-prepare
