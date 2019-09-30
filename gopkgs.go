@@ -274,7 +274,7 @@ func collectPkgs(srcDir, workDir string, noVendor bool, out map[string]Pkg) erro
 	return nil
 }
 
-func collectModPkgs(m mod, out map[string]Pkg) error {
+func collectModPkgs(m mod, vendorMode bool, out map[string]Pkg) error {
 	filec, errc := listModFiles(m.dir)
 	for f := range filec {
 		pkgDir := f.dir
@@ -297,7 +297,12 @@ func collectModPkgs(m mod, out map[string]Pkg) error {
 		// debug := true
 		importPath := m.path
 		if pkgDir != m.dir {
-			importPath += filepath.ToSlash(pkgDir[len(m.dir):])
+			// remove prefix if pkg is vendored
+			if vendorMode && strings.HasPrefix(pkgDir, m.dir+"/vendor") {
+				importPath = strings.TrimPrefix(pkgDir, m.dir+"/vendor/")
+			} else {
+				importPath += filepath.ToSlash(pkgDir[len(m.dir):])
+			}
 		}
 
 		out[pkgDir] = Pkg{
@@ -330,7 +335,8 @@ func List(opts Options) (map[string]Pkg, error) {
 		return pkgs, nil
 	}
 
-	mods, err := listMods(opts.WorkDir)
+	vendorMode := checkVendorMode()
+	mods, err := listMods(opts.WorkDir, vendorMode)
 	if err != nil {
 		// GOPATH mode
 		for _, srcDir := range build.Default.SrcDirs() {
@@ -348,7 +354,7 @@ func List(opts Options) (map[string]Pkg, error) {
 	}
 
 	for _, m := range mods {
-		err = collectModPkgs(m, pkgs)
+		err = collectModPkgs(m, vendorMode, pkgs)
 		if err != nil {
 			return nil, err
 		}
@@ -363,17 +369,13 @@ type mod struct {
 }
 
 const (
-	goflagsEnv         = "GOFLAGS"
-	modVendorFlagValue = "-mod=vendor"
-
 	normalFormatTpl           = "{{.Path}};{{.Dir}}"
 	modVendorExcludeFormatTpl = "{{if not .Indirect}}{{.Path}};{{.Dir}}{{end}}"
 )
 
-func listMods(workDir string) ([]mod, error) {
+func listMods(workDir string, vendorMode bool) ([]mod, error) {
 	goListformatFlagValue := "-f="
-	goflags := os.Getenv(goflagsEnv)
-	if strings.Contains(goflags, modVendorFlagValue) {
+	if vendorMode {
 		goListformatFlagValue += modVendorExcludeFormatTpl
 	} else {
 		goListformatFlagValue += normalFormatTpl
@@ -394,4 +396,13 @@ func listMods(workDir string) ([]mod, error) {
 		mods = append(mods, mod{path: ls[0], dir: ls[1]})
 	}
 	return mods, nil
+}
+
+const (
+	goflagsEnv         = "GOFLAGS"
+	modVendorFlagValue = "-mod=vendor"
+)
+
+func checkVendorMode() bool {
+	return strings.Contains(os.Getenv(goflagsEnv), modVendorFlagValue)
 }
