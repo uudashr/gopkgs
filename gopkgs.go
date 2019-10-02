@@ -3,7 +3,6 @@ package gopkgs
 import (
 	"bufio"
 	"bytes"
-	"errors"
 	"go/build"
 	"io"
 	"os"
@@ -12,7 +11,13 @@ import (
 	"strings"
 
 	"github.com/karrick/godirwalk"
-	pkgerrors "github.com/pkg/errors"
+	"github.com/pkg/errors"
+)
+
+const (
+	goflagsEnv    = "GOFLAGS"
+	modEmptyFlag  = "-mod="
+	modVendorFlag = "-mod=vendor"
 )
 
 // Pkg hold the information of the package.
@@ -69,7 +74,7 @@ func readPackageName(filename string) (string, error) {
 				ls := strings.Split(line, " ")
 				if len(ls) < 2 {
 					mustClose(f)
-					return "", errors.New("expect pattern 'package <name>':" + line)
+					return "", errors.Errorf("expect pattern 'package <name>':%s", line)
 				}
 
 				mustClose(f)
@@ -163,7 +168,7 @@ func listFiles(srcDir, workDir string, noVendor bool) (<-chan goFile, <-chan err
 				return nil
 			},
 			ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
-				err = pkgerrors.Cause(err)
+				err = errors.Cause(err)
 				if v, ok := err.(*os.PathError); ok && (os.IsNotExist(v.Err) || os.IsPermission(v.Err)) {
 					return godirwalk.SkipNode
 				}
@@ -223,7 +228,7 @@ func listModFiles(modDir string) (<-chan goFile, <-chan error) {
 				return nil
 			},
 			ErrorCallback: func(s string, err error) godirwalk.ErrorAction {
-				err = pkgerrors.Cause(err)
+				err = errors.Cause(err)
 				if v, ok := err.(*os.PathError); ok && os.IsNotExist(v.Err) {
 					return godirwalk.SkipNode
 				}
@@ -275,7 +280,16 @@ func collectPkgs(srcDir, workDir string, noVendor bool, out map[string]Pkg) erro
 }
 
 func collectModPkgs(m mod, vendorMode bool, out map[string]Pkg) error {
-	filec, errc := listModFiles(m.dir)
+	// choose proper directory for search
+	dir := m.pkgDir
+	if vendorMode {
+		var err error
+		if dir, err = pickDir(m.pkgDir, m.vendorDir); err != nil {
+			return errors.Wrap(err, "unable to list mod files")
+		}
+	}
+
+	filec, errc := listModFiles(dir)
 	for f := range filec {
 		pkgDir := f.dir
 		if _, found := out[pkgDir]; found {
@@ -296,12 +310,12 @@ func collectModPkgs(m mod, vendorMode bool, out map[string]Pkg) error {
 
 		// debug := true
 		importPath := m.path
-		if pkgDir != m.dir {
+		if pkgDir != dir {
 			// remove prefix if pkg is vendored
-			if vendorMode && strings.HasPrefix(pkgDir, m.dir+"/vendor") {
-				importPath = strings.TrimPrefix(pkgDir, m.dir+"/vendor/")
+			if vendorMode && strings.HasPrefix(pkgDir, dir+"/vendor") {
+				importPath = strings.TrimPrefix(pkgDir, dir+"/vendor/")
 			} else {
-				importPath += filepath.ToSlash(pkgDir[len(m.dir):])
+				importPath += filepath.ToSlash(pkgDir[len(dir):])
 			}
 		}
 
@@ -364,23 +378,54 @@ func List(opts Options) (map[string]Pkg, error) {
 }
 
 type mod struct {
-	path string
-	dir  string
+	path      string
+	pkgDir    string
+	vendorDir string
 }
 
-const (
-	normalFormatTpl           = "{{.Path}};{{.Dir}}"
-	modVendorExcludeFormatTpl = "{{if not .Indirect}}{{.Path}};{{.Dir}}{{end}}"
-)
-
 func listMods(workDir string, vendorMode bool) ([]mod, error) {
-	goListformatFlagValue := "-f="
-	if vendorMode {
-		goListformatFlagValue += modVendorExcludeFormatTpl
-	} else {
-		goListformatFlagValue += normalFormatTpl
+	// exec `go list -m ...` to get module path list
+	// if GOFLAGS contains '-mod=vendor', it gets vendor path list instead
+	s, err := execGoList(workDir, "list", "-m", "-f={{.Path}};{{.Dir}}", "all")
+	if err != nil {
+		return nil, errors.Wrap(err, "unable to execute `go list -m ...`")
 	}
-	cmdArgs := []string{"list", "-m", goListformatFlagValue, "all"}
+
+	var mods []mod
+	for s.Scan() {
+		line := s.Text()
+		ls := strings.Split(line, ";")
+		if vendorMode {
+			mods = append(mods, mod{path: ls[0], vendorDir: ls[1]})
+		} else {
+			mods = append(mods, mod{path: ls[0], pkgDir: ls[1]})
+		}
+	}
+
+	// if GOFLAGS contains '-mod=vendor', exec `go list -mod= -m ...` to fill the module paths as well
+	if vendorMode {
+		s, err = execGoList(workDir, "list", modEmptyFlag, "-m", "-f={{.Path}};{{.Dir}}", "all")
+		if err != nil {
+			return nil, errors.Wrap(err, "unable to execute `go list -mod= -m ...`")
+		}
+
+		keyIndexMap := make(map[string]int, len(mods))
+		for i, m := range mods {
+			keyIndexMap[m.path] = i
+		}
+		for s.Scan() {
+			line := s.Text()
+			ls := strings.Split(line, ";")
+			if _, ok := keyIndexMap[ls[0]]; ok {
+				mods[keyIndexMap[ls[0]]].pkgDir = ls[1]
+			}
+		}
+	}
+
+	return mods, nil
+}
+
+func execGoList(workDir string, cmdArgs ...string) (*bufio.Scanner, error) {
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
@@ -388,21 +433,20 @@ func listMods(workDir string, vendorMode bool) ([]mod, error) {
 		return nil, err
 	}
 
-	var mods []mod
-	s := bufio.NewScanner(bytes.NewReader(out))
-	for s.Scan() {
-		line := s.Text()
-		ls := strings.Split(line, ";")
-		mods = append(mods, mod{path: ls[0], dir: ls[1]})
-	}
-	return mods, nil
+	return bufio.NewScanner(bytes.NewReader(out)), nil
 }
 
-const (
-	goflagsEnv         = "GOFLAGS"
-	modVendorFlagValue = "-mod=vendor"
-)
-
 func checkVendorMode() bool {
-	return strings.Contains(os.Getenv(goflagsEnv), modVendorFlagValue)
+	return strings.Contains(os.Getenv(goflagsEnv), modVendorFlag)
+}
+
+// we prefer vendorDir to pkgDir if it exists
+func pickDir(pkgDir, vendorDir string) (string, error) {
+	if _, err := os.Stat(vendorDir); !os.IsNotExist(err) {
+		return vendorDir, nil
+	}
+	if _, err := os.Stat(pkgDir); !os.IsNotExist(err) {
+		return pkgDir, nil
+	}
+	return "", os.ErrNotExist
 }
