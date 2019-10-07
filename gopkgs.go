@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/karrick/godirwalk"
@@ -20,6 +21,7 @@ type Pkg struct {
 	Dir        string // directory containing package sources
 	ImportPath string // import path of package in dir
 	Name       string // package name
+	Standard   bool   // is this package part of the standard Go library?
 }
 
 // Options for retrieve packages.
@@ -259,11 +261,11 @@ func collectPkgs(srcDir, workDir string, noVendor bool, out map[string]Pkg) erro
 			// skip main package
 			continue
 		}
-
 		out[pkgDir] = Pkg{
 			Name:       pkgName,
 			ImportPath: filepath.ToSlash(pkgDir[len(srcDir)+len("/"):]),
 			Dir:        pkgDir,
+			Standard:   strings.Contains(pkgDir, build.Default.GOROOT),
 		}
 	}
 
@@ -304,6 +306,7 @@ func collectModPkgs(m mod, out map[string]Pkg) error {
 			Name:       pkgName,
 			ImportPath: importPath,
 			Dir:        pkgDir,
+			Standard:   strings.Contains(pkgDir, build.Default.GOROOT),
 		}
 	}
 
@@ -358,12 +361,13 @@ func List(opts Options) (map[string]Pkg, error) {
 }
 
 type mod struct {
-	path string
-	dir  string
+	path     string
+	dir      string
+	standard bool
 }
 
 func listMods(workDir string) ([]mod, error) {
-	cmdArgs := []string{"list", "-m", "-f={{.Path}};{{.Dir}}", "all"}
+	cmdArgs := []string{"list", "-m", "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
@@ -376,7 +380,11 @@ func listMods(workDir string) ([]mod, error) {
 	for s.Scan() {
 		line := s.Text()
 		ls := strings.Split(line, ";")
-		mods = append(mods, mod{path: ls[0], dir: ls[1]})
+		b, err := strconv.ParseBool(ls[2])
+		if err != nil {
+			return nil, err
+		}
+		mods = append(mods, mod{path: ls[0], dir: ls[1], standard: b})
 	}
 	return mods, nil
 }
