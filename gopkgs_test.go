@@ -1,7 +1,10 @@
 package gopkgs_test
 
-import "testing"
-import "github.com/uudashr/gopkgs"
+import (
+	"testing"
+
+	"github.com/uudashr/gopkgs/v2"
+)
 
 func TestList(t *testing.T) {
 	if testing.Short() {
