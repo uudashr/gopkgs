@@ -12,7 +12,7 @@ This is an alternative to `go list all`, just faster.
 
 or, using **Go 1.12+**:
 
-`$ go get github.com/uudashr/gopkgs/cmd/gopkgs@latest`
+`$ go get github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest`
 
 ## Usage
 
@@ -61,7 +61,7 @@ awss3;github.com/mattes/migrate/source/aws-s3
 
 ### Tips
 
-Use `-workDir={path}` flag, it will speed up the package search by ignoring the exernal vendor.
+Use `-workDir={path}` flag, it will speed up the package search by ignoring the external vendor.
 
 ## Related Project
 
