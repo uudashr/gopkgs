@@ -61,7 +61,7 @@ awss3;github.com/mattes/migrate/source/aws-s3
 
 ### Tips
 
-Use `-workDir={path}` flag, it will speed up the package search by ignoring the exernal vendor.
+Use `-workDir={path}` flag, it will speed up the package search by ignoring the external vendor.
 
 ## Related Project
 
