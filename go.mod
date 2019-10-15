@@ -1,4 +1,4 @@
-module github.com/uudashr/gopkgs
+module github.com/uudashr/gopkgs/v2
 
 go 1.12
 
