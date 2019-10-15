@@ -1,8 +1,8 @@
-[![Build Status](https://travis-ci.org/uudashr/gopkgs.svg?branch=master)](https://travis-ci.org/uudashr/gopkgs)
-[![GoDoc](https://godoc.org/github.com/uudashr/gopkgs?status.svg)](https://godoc.org/github.com/uudashr/gopkgs)
+[![Build Status](https://travis-ci.org/uudashr/gopkgs.svg?branch=master)](https://travis-ci.org/uudashr/gopkgs)[![GoDoc](https://godoc.org/github.com/uudashr/gopkgs?status.svg)](https://godoc.org/github.com/uudashr/gopkgs)
+
 # gopkgs
 
-Gopkgs is tools that provide list of available Go packages that can be imported.
+`gopkgs` is a tool that provides list of available Go packages that can be imported.
 
 This is an alternative to `go list all`, just faster.
 
@@ -10,8 +10,13 @@ This is an alternative to `go list all`, just faster.
 
 `$ go get -u github.com/uudashr/gopkgs/cmd/gopkgs`
 
+or, using **Go 1.12+**:
+
+`$ go get github.com/uudashr/gopkgs/cmd/gopkgs@latest`
+
 ## Usage
-```
+
+```plaintext
 $ gopkgs -help
   -format string
     	custom output format (default "{{.ImportPath}}")
@@ -34,8 +39,10 @@ Use -workDir={path} to speed up the package search. This will ignore any vendor 
 ```
 
 ### Example
+
 Get package name along with the import path.
-```
+
+```plaintext
 $ gopkgs -format "{{.Name}};{{.ImportPath}}"
 testing;github.com/mattes/migrate/source/testing
 http;github.com/stretchr/testify/http
@@ -58,4 +65,4 @@ Use `-workDir={path}` flag, it will speed up the package search by ignoring the 
 
 ## Related Project
 
-This is based on https://github.com/haya14busa/gopkgs but taking slightly different path by simplifying its implementation.
+This is based on <https://github.com/haya14busa/gopkgs> but takes slightly different path by simplifying its implementation.

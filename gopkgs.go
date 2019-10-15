@@ -16,6 +16,12 @@ import (
 	pkgerrors "github.com/pkg/errors"
 )
 
+const (
+	mainPkg        = "main"
+	testDataDir    = "testdata"
+	nodeModulesDir = "node_modules"
+)
+
 // Pkg hold the information of the package.
 type Pkg struct {
 	Dir        string // directory containing package sources
@@ -128,7 +134,7 @@ func listFiles(srcDir, workDir string, noVendor bool) (<-chan goFile, <-chan err
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
 				if de.IsDir() {
-					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+					if name[0] == '.' || name[0] == '_' || name == testDataDir || name == nodeModulesDir {
 						return filepath.SkipDir
 					}
 
@@ -207,7 +213,7 @@ func listModFiles(modDir string) (<-chan goFile, <-chan error) {
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
 				if de.IsDir() {
-					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+					if name[0] == '.' || name[0] == '_' || name == testDataDir || name == nodeModulesDir {
 						return filepath.SkipDir
 					}
 
@@ -257,7 +263,7 @@ func collectPkgs(srcDir, workDir string, noVendor bool, out map[string]Pkg) erro
 			continue
 		}
 
-		if pkgName == "main" {
+		if pkgName == mainPkg {
 			// skip main package
 			continue
 		}
@@ -291,7 +297,7 @@ func collectModPkgs(m mod, out map[string]Pkg) error {
 			continue
 		}
 
-		if pkgName == "main" {
+		if pkgName == mainPkg {
 			// skip main package
 			continue
 		}
@@ -367,7 +373,7 @@ type mod struct {
 }
 
 func listMods(workDir string) ([]mod, error) {
-	cmdArgs := []string{"list", "-m", "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
+	cmdArgs := []string{"list", "-m", `-mod=""`, "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
