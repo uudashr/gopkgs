@@ -18,6 +18,10 @@ const (
 	goflagsEnv    = "GOFLAGS"
 	modEmptyFlag  = "-mod="
 	modVendorFlag = "-mod=vendor"
+
+	mainPkg        = "main"
+	testDataDir    = "testdata"
+	nodeModulesDir = "node_modules"
 )
 
 // Pkg hold the information of the package.
@@ -131,7 +135,7 @@ func listFiles(srcDir, workDir string, noVendor bool) (<-chan goFile, <-chan err
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
 				if de.IsDir() {
-					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+					if name[0] == '.' || name[0] == '_' || name == testDataDir || name == nodeModulesDir {
 						return filepath.SkipDir
 					}
 
@@ -210,7 +214,7 @@ func listModFiles(modDir string) (<-chan goFile, <-chan error) {
 				// see: https://golang.org/cmd/go/#hdr-Description_of_package_lists
 
 				if de.IsDir() {
-					if name[0] == '.' || name[0] == '_' || name == "testdata" || name == "node_modules" {
+					if name[0] == '.' || name[0] == '_' || name == testDataDir || name == nodeModulesDir {
 						return filepath.SkipDir
 					}
 
@@ -260,7 +264,7 @@ func collectPkgs(srcDir, workDir string, noVendor bool, out map[string]Pkg) erro
 			continue
 		}
 
-		if pkgName == "main" {
+		if pkgName == mainPkg {
 			// skip main package
 			continue
 		}
@@ -303,7 +307,7 @@ func collectModPkgs(m mod, vendorMode bool, out map[string]Pkg) error {
 			continue
 		}
 
-		if pkgName == "main" {
+		if pkgName == mainPkg {
 			// skip main package
 			continue
 		}
