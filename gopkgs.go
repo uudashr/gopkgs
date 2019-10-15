@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"github.com/karrick/godirwalk"
@@ -312,7 +311,7 @@ func collectModPkgs(m mod, out map[string]Pkg) error {
 			Name:       pkgName,
 			ImportPath: importPath,
 			Dir:        pkgDir,
-			Standard:   strings.Contains(pkgDir, build.Default.GOROOT),
+			Standard:   strings.HasPrefix(pkgDir, build.Default.GOROOT),
 		}
 	}
 
@@ -367,13 +366,12 @@ func List(opts Options) (map[string]Pkg, error) {
 }
 
 type mod struct {
-	path     string
-	dir      string
-	standard bool
+	path string
+	dir  string
 }
 
 func listMods(workDir string) ([]mod, error) {
-	cmdArgs := []string{"list", "-m", "-mod=", "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
+	cmdArgs := []string{"list", "-m", "-mod=", "-f={{.Path}};{{.Dir}}", "all"}
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
@@ -386,11 +384,10 @@ func listMods(workDir string) ([]mod, error) {
 	for s.Scan() {
 		line := s.Text()
 		ls := strings.Split(line, ";")
-		b, err := strconv.ParseBool(ls[2])
 		if err != nil {
 			return nil, err
 		}
-		mods = append(mods, mod{path: ls[0], dir: ls[1], standard: b})
+		mods = append(mods, mod{path: ls[0], dir: ls[1]})
 	}
 	return mods, nil
 }
