@@ -373,7 +373,7 @@ type mod struct {
 }
 
 func listMods(workDir string) ([]mod, error) {
-	cmdArgs := []string{"list", "-m", `-mod=""`, "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
+	cmdArgs := []string{"list", "-m", "-mod=", "-f={{.Path}};{{.Dir}};{{.Standard}}", "all"}
 	cmd := exec.Command("go", cmdArgs...)
 	cmd.Dir = workDir
 	out, err := cmd.Output()
