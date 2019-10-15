@@ -18,6 +18,7 @@ or, using **Go 1.12+**:
 
 ```plaintext
 $ gopkgs -help
+Usage of gopkgs:
   -format string
     	custom output format (default "{{.ImportPath}}")
   -help
@@ -33,9 +34,10 @@ Use -format to custom the output using template syntax. The struct being passed 
         Dir        string // directory containing package sources
         ImportPath string // import path of package in dir
         Name       string // package name
+        Standard   bool   // is this package part of the standard Go library?
     }
 
-Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the workDir.
+Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the package root.
 ```
 
 ### Example
