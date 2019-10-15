@@ -19,8 +19,7 @@ os:
   - osx
 
 before_install:
-  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.8 ]] || [[ "$TRAVIS_GO_VERSION" =~ ^1\.9 ]] || [[ "$TRAVIS_GO_VERSION" =~ ^1\.10 ]]; then \
-    cd .. && mkdir v2 && mv gopkgs/* v2/ &&  mv v2 gopkgs/v2; fi
+  - if [[ "$TRAVIS_GO_VERSION" =~ ^1\.8 ]] || [[ "$TRAVIS_GO_VERSION" =~ ^1\.9 ]] || [[ "$TRAVIS_GO_VERSION" =~ ^1\.10 ]]; then cd .. && mkdir v2 && mv gopkgs/* v2/ &&  mv v2 gopkgs/v2; fi
 
 install:
   - env GO111MODULE=on go mod download || go get -u
