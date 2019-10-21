@@ -8,9 +8,9 @@ TRAVIS_GO_VERSION ?= $(GO_VERSION_MINOR).x
 GOLANGCI_LINT_1.9.x := v1.10.2
 GOLANGCI_LINT_1.10.x := v1.15.0
 GOLANGCI_LINT_1.11.x := v1.17.1
-GOLANGCI_LINT_1.12.x := v1.19.1
-GOLANGCI_LINT_1.13.x := v1.19.1
-GOLANGCI_LINT_tip := v1.19.1
+GOLANGCI_LINT_1.12.x := v1.21.0
+GOLANGCI_LINT_1.13.x := v1.21.0
+GOLANGCI_LINT_tip := v1.21.0
 GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 
 # Linter
@@ -18,7 +18,7 @@ GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 lint-prepare:
 	@if [ $(GOLANGCI_LINT) == "" ]; then \
 		echo "Unknown Go version - using the latest linter"; \
-		GOLANGCI_LINT := v1.19.1; \
+		GOLANGCI_LINT := $(GOLANGCI_LINT_tip); \
 	fi
 	@echo "Installing golangci-lint $(GOLANGCI_LINT)"
 	@[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin
