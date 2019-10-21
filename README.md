@@ -12,9 +12,11 @@ This is an alternative to `go list all`, just faster.
 
 or, using **Go 1.12+**:
 
-`$ go get github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest`
+`$ go get github.com/uudashr/gopkgs/cmd/gopkgs@latest`
 
 ## Usage
+
+### Tool
 
 ```plaintext
 $ gopkgs -help
@@ -39,6 +41,14 @@ Use -format to custom the output using template syntax. The struct being passed 
 
 Use -workDir={path} to speed up the package search. This will ignore any vendor package outside the package root.
 ```
+
+### Library
+
+This project adheres to the Go modules [release strategy](https://github.com/golang/go/wiki/Modules#releasing-modules-v2-or-higher) by using the `Major subdirectory` approach.
+
+Starting from version `v2.0.3`, you're able to use either `github.com/uudashr/gopkgs` or `github.com/uudashr/gopkgs/v2` versions independently.
+
+The tool `cmd/gopkgs` uses `v2` package internally.
 
 ### Example
 
