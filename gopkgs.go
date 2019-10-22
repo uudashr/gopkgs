@@ -384,9 +384,6 @@ func listMods(workDir string) ([]mod, error) {
 	for s.Scan() {
 		line := s.Text()
 		ls := strings.Split(line, ";")
-		if err != nil {
-			return nil, err
-		}
 		mods = append(mods, mod{path: ls[0], dir: ls[1]})
 	}
 	return mods, nil
