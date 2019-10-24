@@ -41,6 +41,7 @@ lint:
 .PHONY: test
 test: 
 	@go test $(TEST_OPTS)
+	@go test $(TEST_OPTS) github.com/uudashr/gopkgs/v2
 
 .PHONY: bench
 bench: 
