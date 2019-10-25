@@ -3,7 +3,7 @@ package gopkgs_test
 import (
 	"testing"
 
-	gopkgs "github.com/uudashr/gopkgs/v2"
+	"github.com/uudashr/gopkgs"
 )
 
 func TestList(t *testing.T) {
