@@ -1,19 +1,19 @@
-package gopkgs
+package gopkgs // import "github.com/uudashr/gopkgs/v2"
 
 import (
-	v2 "github.com/uudashr/gopkgs/v2"
+	"github.com/uudashr/gopkgs/v2/internal"
 )
 
 // Pkg hold the information of the package.
-type Pkg v2.Pkg
+type Pkg internal.Pkg
 
 // Options for retrieve packages.
-type Options v2.Options
+type Options internal.Options
 
 // List packages on workDir.
 // workDir is required for module mode. If the workDir is not under module, then it will fallback to GOPATH mode.
 func List(opts Options) (map[string]Pkg, error) {
-	result, err := v2.List(v2.Options(opts))
+	result, err := internal.List(internal.Options(opts))
 	if err != nil {
 		return nil, err
 	}

@@ -1,17 +1,16 @@
-package gopkgs_test
+package internal
 
 import (
 	"testing"
-
-	gopkgs "github.com/uudashr/gopkgs/v2"
 )
+
 
 func TestList(t *testing.T) {
 	if testing.Short() {
 		t.Skip("Skip non-short mode")
 	}
 
-	pkgs, err := gopkgs.List(gopkgs.Options{})
+	pkgs, err := List(Options{})
 	if err != nil {
 		t.Fatal("fail getting packages:", err)
 	}
@@ -23,7 +22,7 @@ func TestList(t *testing.T) {
 
 func BenchmarkList(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		if _, err := gopkgs.List(gopkgs.Options{}); err != nil {
+		if _, err := List(Options{}); err != nil {
 			b.Fatal("err:", err)
 		}
 	}
