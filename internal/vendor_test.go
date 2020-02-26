@@ -1,4 +1,4 @@
-package gopkgs
+package internal
 
 import (
 	"testing"

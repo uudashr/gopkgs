@@ -10,7 +10,7 @@ import (
 	"runtime/trace"
 	"text/tabwriter"
 
-	gopkgs "github.com/uudashr/gopkgs/v2"
+	"github.com/uudashr/gopkgs/v2"
 )
 
 var usageInfo = `
