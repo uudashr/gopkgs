@@ -16,7 +16,7 @@ GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
-	@if [ $(GOLANGCI_LINT) == "" ]; then \
+	@if [ -n "$(GOLANGCI_LINT)" ]; then \
 		echo "Unknown Go version - using the latest linter"; \
 		GOLANGCI_LINT := $(GOLANGCI_LINT_tip); \
 	fi
