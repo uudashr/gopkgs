@@ -13,13 +13,13 @@ GOLANGCI_LINT_1.13.x := v1.21.0
 GOLANGCI_LINT_tip := v1.21.0
 GOLANGCI_LINT := ${GOLANGCI_LINT_${TRAVIS_GO_VERSION}}
 
+ifeq ($(GOLANGCI_LINT),)
+	GOLANGCI_LINT := $(GOLANGCI_LINT_tip)
+endif
+
 # Linter
 .PHONY: lint-prepare
 lint-prepare:
-	@if [ -n "$(GOLANGCI_LINT)" ]; then \
-		echo "Unknown Go version - using the latest linter"; \
-		GOLANGCI_LINT := $(GOLANGCI_LINT_tip); \
-	fi
 	@echo "Installing golangci-lint $(GOLANGCI_LINT)"
 	@[ -d $(GOPATH)/bin ] || mkdir -p $(GOPATH)/bin
 	@curl -sfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(GOPATH)/bin $(GOLANGCI_LINT)
