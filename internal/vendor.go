@@ -1,4 +1,4 @@
-package gopkgs
+package internal // import "github.com/uudashr/gopkgs/v2/internal"
 
 import "strings"
 
