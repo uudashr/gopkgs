@@ -48,6 +48,7 @@ func mustClose(c io.Closer) {
 }
 
 func readPackageName(filename string) (string, error) {
+	// #nosec G304 - no prefix based access checks performed, false positive
 	f, err := os.Open(filename)
 	if err != nil {
 		return "", err
