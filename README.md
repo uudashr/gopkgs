@@ -12,7 +12,7 @@ This is an alternative to `go list all`, just faster.
 
 or, using **Go 1.12+**:
 
-`$ go get github.com/uudashr/gopkgs/cmd/gopkgs@latest`
+`$ go install github.com/uudashr/gopkgs/v2/cmd/gopkgs@latest`
 
 ## Usage
 
